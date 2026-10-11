@@ -12,11 +12,11 @@ import {
   ArrowRight, 
   CheckCircle2, 
   AlertCircle,
-  Building2,
-  Sparkles
+  Building2
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { authenticateAdmin, DEFAULT_ADMIN_CREDENTIALS } from "@/lib/supabase";
+
+
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -32,10 +32,17 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const admin = await authenticateAdmin(email, password);
-      if (admin) {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.admin) {
         if (typeof window !== "undefined") {
-          localStorage.setItem("afs_admin_session", JSON.stringify(admin));
+          localStorage.setItem("afs_admin_session", JSON.stringify(data.admin));
         }
         router.push("/admin");
       } else {
@@ -48,11 +55,6 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleFillDemo = () => {
-    setEmail(DEFAULT_ADMIN_CREDENTIALS.email);
-    setPassword(DEFAULT_ADMIN_CREDENTIALS.password);
-    setError(null);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden py-12">
@@ -109,7 +111,7 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@abcofoodsupply.com"
+                  
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent font-medium"
                 />
               </div>
@@ -143,40 +145,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Quick Demo Fill Helper */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-brand-red" />
-                <span>One-Click Fill Credentials</span>
-              </button>
-            </div>
-
-            {/* Credentials Card: Black text on clean light background */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] space-y-1.5">
-              <div className="text-slate-800 font-bold flex items-center justify-between">
-                <span>Default Admin Credentials:</span>
-                <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">READY</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-900">
-                <span className="text-slate-600 font-medium">Email:</span>
-                <code className="text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded font-mono font-bold">
-                  admin@abcofoodsupply.com
-                </code>
-              </div>
-              <div className="flex items-center justify-between text-slate-900">
-                <span className="text-slate-600 font-medium">Password:</span>
-                <code className="text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded font-mono font-bold">
-                  AdminPassword2026!
-                </code>
-              </div>
-              <div className="text-[10px] text-slate-500 text-center pt-1 font-medium">
-                Also accepted: Password <code className="text-slate-800 font-bold">Abcofood@0302</code> or <code className="text-slate-800 font-bold">admin123</code>
-              </div>
-            </div>
 
             {/* Red Action Button */}
             <button

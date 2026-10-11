@@ -318,7 +318,7 @@ export default function ProductDetailPage() {
                   <span>Request Wholesale Pricing</span>
                 </button>
                 <a
-                  href={`https://wa.me/966501234567?text=Hello%20AFS,%20I%20would%20like%20to%20request%20pricing%20for%20${encodeURIComponent(product.name)}.`}
+                  href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to request wholesale pricing for ${product.name} (${product.category_name}).`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="bg-[#25D366] hover:bg-[#20ba59] text-white px-7 py-3.5 rounded-full text-base font-bold shadow-md transition-all flex items-center gap-2"
@@ -463,7 +463,7 @@ export default function ProductDetailPage() {
                     required
                     value={rfqPhone}
                     onChange={(e) => setRfqPhone(e.target.value)}
-                    placeholder="+966 5X XXX XXXX"
+                    placeholder="+966 57 299 5987"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:border-brand-red outline-none"
                   />
                 </div>

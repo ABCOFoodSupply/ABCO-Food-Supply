@@ -3,7 +3,7 @@
  * Connects to Supabase REST and Auth endpoints using credentials from .env.
  */
 
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://exrgcryuyhkwpqsyciif.supabase.co";
+export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 export const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
@@ -15,42 +15,38 @@ export interface AdminUser {
   lastLogin: string;
 }
 
-// Default super admin credentials for login
-export const DEFAULT_ADMIN_CREDENTIALS = {
-  email: "admin@abcofoodsupply.com",
-  password: "AdminPassword2026!",
-  name: "AFS Jubail Headquarters",
-  role: "super_admin" as const,
-};
-
-// Accepted administrative passwords for convenience
-export const ACCEPTED_PASSWORDS = [
-  "AdminPassword2026!",
-  "Abcofood@0302",
-  "admin123",
-];
-
 /**
- * Direct Admin Credentials Authentication (No external Supabase Auth required)
+ * Direct Admin Credentials Authentication — credentials loaded from .env
+ * ADMIN_EMAILS_ALLOWED and ADMIN_PASSWORDS_ALLOWED are comma-separated lists.
  */
 export async function authenticateAdmin(email: string, password: string): Promise<AdminUser | null> {
   const cleanEmail = email.trim().toLowerCase();
   const cleanPassword = password.trim();
 
-  // Allow admin@abcofoodsupply.com, admin@afs.sa, or simply 'admin'
-  const isEmailMatch =
-    cleanEmail === "admin@abcofoodsupply.com" ||
-    cleanEmail === "admin@afs.sa" ||
-    cleanEmail === "admin";
+  // Read allowed values from env (server-side only — never NEXT_PUBLIC_)
+  const allowedEmails = (process.env.ADMIN_EMAILS_ALLOWED || process.env.ADMIN_EMAIL || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
 
-  const isPasswordMatch = ACCEPTED_PASSWORDS.includes(cleanPassword);
+  const allowedPasswords = (process.env.ADMIN_PASSWORDS_ALLOWED || process.env.ADMIN_PASSWORD || "")
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const adminEmail = (process.env.ADMIN_EMAIL || "").trim();
+  const adminName = (process.env.ADMIN_NAME || "AFS Administrator").trim();
+  const adminRole = (process.env.ADMIN_ROLE || "super_admin").trim() as AdminUser["role"];
+
+  const isEmailMatch = allowedEmails.includes(cleanEmail);
+  const isPasswordMatch = allowedPasswords.includes(cleanPassword);
 
   if (isEmailMatch && isPasswordMatch) {
     return {
       id: "admin-master-001",
-      email: DEFAULT_ADMIN_CREDENTIALS.email,
-      name: DEFAULT_ADMIN_CREDENTIALS.name,
-      role: DEFAULT_ADMIN_CREDENTIALS.role,
+      email: adminEmail,
+      name: adminName,
+      role: adminRole,
       lastLogin: new Date().toISOString(),
     };
   }

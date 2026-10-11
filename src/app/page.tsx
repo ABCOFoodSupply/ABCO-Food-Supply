@@ -9,6 +9,7 @@ import { B2BBanner } from "@/components/B2BBanner";
 import { Services } from "@/components/Services";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { Partners } from "@/components/Partners";
+import { HomeGallery } from "@/components/HomeGallery";
 import { ContactSection } from "@/components/ContactSection";
 import { Footer } from "@/components/Footer";
 import { EnquiryModal } from "@/components/EnquiryModal";
@@ -63,7 +64,10 @@ export default function Home() {
       {/* Clients & Hypermarket Partners */}
       <Partners />
 
-      {/* Contact Section: Get In Touch, Send Us Enquiry Form, Jubail Map */}
+      {/* Operational Showcase Gallery (Direct from DB) */}
+      <HomeGallery />
+
+      {/* Contact Section: Get In Touch, Jubail Map */}
       <ContactSection />
 
       {/* Footer */}

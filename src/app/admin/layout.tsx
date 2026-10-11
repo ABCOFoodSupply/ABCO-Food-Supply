@@ -56,7 +56,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [pathname, isLoginPage, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch { /* ignore */ }
     if (typeof window !== "undefined") {
       localStorage.removeItem("afs_admin_session");
     }
@@ -71,10 +74,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Home Page CMS", href: "/admin/cms", icon: LayoutTemplate, badge: "Sections", badgeColor: "bg-brand-red text-white font-bold" },
     { name: "Products & Categories", href: "/admin/products", icon: Package },
-    { name: "Wholesale RFQs", href: "/admin/rfq", icon: Inbox, badge: "6", badgeColor: "bg-brand-red text-white font-bold" },
-    { name: "ImageKit CDN Media", href: "/admin/media", icon: ImageIcon },
-    { name: "Hypermarket Clients", href: "/admin/partners", icon: Users },
-    { name: "Depot Settings", href: "/admin/settings", icon: Settings },
+    { name: "Wholesale RFQs", href: "/admin/rfq", icon: Inbox, badgeColor: "bg-brand-red text-white font-bold" },
+    { name: "Gallery", href: "/admin/media", icon: ImageIcon },
+    { name: "Clients", href: "/admin/partners", icon: Users },
+    { name: "Admin Settings", href: "/admin/settings", icon: Settings },
   ];
 
   return (
@@ -105,31 +108,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <X className="w-5 h-5" />
           </button>
         </div>
-
-        {/* System Health Indicators */}
-        <div className="px-5 py-3 bg-slate-50/80 border-b border-slate-200/70 text-[11px] space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600 font-medium flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Supabase DB</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Connected
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600 font-medium flex items-center gap-1.5">
-              <CloudLightning className="w-3.5 h-3.5 text-cyan-600" />
-              <span>ImageKit CDN</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-cyan-600 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-              Active
-            </span>
-          </div>
-        </div>
-
+        
         {/* Navigation items: text black, when active in particular tag -> RED with WHITE text */}
         <nav className="flex-1 p-3.5 space-y-1 overflow-y-auto">
           {navItems.map((item) => {

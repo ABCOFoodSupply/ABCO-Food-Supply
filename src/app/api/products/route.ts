@@ -11,16 +11,20 @@ const headers = () => ({
 
 /**
  * GET /api/products
- * Returns all products from Supabase. Optional ?category=slug to filter.
+ * Returns all products from Supabase. Optional ?category=slug, ?featured=true to filter.
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
+  const featured = searchParams.get("featured");
 
   try {
     let url = `${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`;
     if (category && category !== "all") {
       url += `&category_slug=eq.${category}`;
+    }
+    if (featured === "true") {
+      url += `&featured_on_homepage=eq.true`;
     }
 
     const res = await fetch(url, { headers: headers(), cache: "no-store" });
@@ -57,6 +61,7 @@ export async function POST(req: NextRequest) {
       certification: body.certification || "SFDA Compliant",
       description: body.description || "",
       specs: body.specs || {},
+      featured_on_homepage: Boolean(body.featured_on_homepage ?? body.featured),
       created_at: new Date().toISOString(),
     };
 
@@ -74,6 +79,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: payload });
   } catch (err) {
     console.error("[products POST]", err);
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/products
+ * Quick toggle or update of product fields (e.g. featured_on_homepage)
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, featured_on_homepage } = body;
+    if (!id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify({ featured_on_homepage: Boolean(featured_on_homepage) }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[products PATCH]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }
 }

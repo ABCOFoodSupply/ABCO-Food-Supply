@@ -245,7 +245,7 @@ export default function ContactPage() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+966 5X XXX XXXX"
+                      placeholder="+966 57 299 5987"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:border-brand-red focus:bg-white focus:ring-1 focus:ring-brand-red/30 outline-none transition-all"
                     />
                   </div>
@@ -418,7 +418,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">Warehouse & Office Address</p>
-                      <p className="text-slate-600">Jubail Industrial City, Support Industrial Area, Kingdom of Saudi Arabia</p>
+                      <p className="text-slate-600">Jubail,
+Kingdom of Saudi Arabia</p>
                     </div>
                   </div>
 
@@ -428,7 +429,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">Telephone Inquiries</p>
-                      <p className="text-slate-600">+966 13 XXX XXXX / +966 5X XXX XXXX</p>
+                      <p className="text-slate-600">+966 13 XXX XXXX / +966 57 299 5987</p>
                     </div>
                   </div>
 
@@ -462,7 +463,7 @@ export default function ContactPage() {
                 {/* Instant WhatsApp Action Card */}
                 <div className="pt-2">
                   <a
-                    href="https://wa.me/966501234567?text=Hello%20ABCO%20Food%20Supply,%20I%20would%20like%20to%20request%20a%20commercial%20quotation."
+                    href="https://wa.me/966572995987?text=Hello%20ABCO%20Food%20Supply,%20I%20would%20like%20to%20request%20a%20commercial%20quotation."
                     target="_blank"
                     rel="noreferrer"
                     className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 rounded-full font-bold text-sm shadow-md flex items-center justify-center gap-2.5 transition-all"

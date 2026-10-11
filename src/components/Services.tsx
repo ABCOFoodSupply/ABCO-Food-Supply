@@ -2,16 +2,14 @@
 
 import React from "react";
 import {
-  Ship,
+  Globe2,
   ShoppingCart,
-  GitBranch,
   Truck,
-  Box,
+  Layers,
+  Tags,
+  UtensilsCrossed,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle,
 } from "lucide-react";
-import { toast } from "sonner";
 
 interface ServicesProps {
   onExploreServices?: () => void;
@@ -20,101 +18,102 @@ interface ServicesProps {
 export const Services: React.FC<ServicesProps> = ({ onExploreServices }) => {
   const services = [
     {
-      title: "Import & Distribution",
-      description: "Sourcing from trusted global suppliers",
-      icon: Ship,
-      details: "Direct container shipping and air-freight clearance ensuring uninterrupted product supply to Saudi wholesalers.",
+      title: "Food Import & Distribution",
+      description:
+        "We source and distribute imported and locally manufactured food products through trusted international and local suppliers.",
+      icon: Globe2,
+      highlight: "Global & Local Sourcing",
     },
     {
-      title: "Procurement Support",
-      description: "Efficient and cost-effective procurement",
+      title: "Procurement Solutions",
+      description:
+        "We provide tailored sourcing and procurement solutions for rice, meat, seafood, poultry, edible oils, spices, lentils, and other food products.",
       icon: ShoppingCart,
-      details: "Dedicated B2B purchasing agents securing high quality commodities at competitive bulk volume pricing.",
+      highlight: "Tailored Sourcing",
     },
     {
-      title: "Logistics Coordination",
-      description: "Reliable supply chain management",
-      icon: GitBranch,
-      details: "Real-time shipment tracking, bonded warehousing, and streamlined inventory control across KSA hubs.",
-    },
-    {
-      title: "Fleet & Transport",
-      description: "Modern fleet and transport solutions",
+      title: "Supply Chain & Logistics",
+      description:
+        "We coordinate efficient transportation, delivery, and cold chain requirements through trusted logistics partners.",
       icon: Truck,
-      details: "Multi-temperature reefer trucks guaranteeing cold chain integrity from port to store doorstep.",
+      highlight: "Cold Chain 24/7",
     },
     {
-      title: "Custom Packaging",
-      description: "Solutions as per business needs",
-      icon: Box,
-      details: "Tailored bulk packaging, private labeling, vacuum sealing, and institutional portion sizes.",
+      title: "Bulk Supply",
+      description:
+        "We provide dependable bulk supply solutions for wholesalers, retailers, distributors, and institutional customers.",
+      icon: Layers,
+      highlight: "Institutional Volumes",
+    },
+    {
+      title: "Private Label & Custom Packaging",
+      description:
+        "We support private label and customized packaging requirements through selected sourcing and supply partners.",
+      icon: Tags,
+      highlight: "Tailored Packaging",
+    },
+    {
+      title: "Catering & Food Service Supply",
+      description:
+        "We supply food products to catering companies, restaurants, hotels, hospitality businesses, and commercial kitchens.",
+      icon: UtensilsCrossed,
+      highlight: "HORECA & Kitchens",
     },
   ];
 
-  const handleCardClick = (service: (typeof services)[0]) => {
-    toast.info(`Service: ${service.title}`, {
-      description: service.details,
-    });
-  };
-
-  const handleExplore = () => {
-    toast.success("Explore Our Food Logistics Services", {
-      description: "Full supply chain management customized for HORECA and retail clients.",
-    });
-    if (onExploreServices) onExploreServices();
-  };
-
   return (
-    <section id="services" className="py-16 md:py-20 bg-white">
+    <section id="services" className="py-16 md:py-24 bg-white border-t border-slate-100">
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-          <div className="space-y-1">
-            <span className="text-xs sm:text-sm font-bold tracking-wider text-brand-red uppercase">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
+          <div className="space-y-2 max-w-2xl">
+            <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase">
               OUR SERVICES
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-              End-to-End Food Supply Solutions
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              End-to-End Food Supply &amp; Logistics Solutions
             </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+              Tailored procurement, unbroken cold chain distribution, and reliable bulk supply solutions across the Kingdom of Saudi Arabia.
+            </p>
           </div>
 
           <button
-            onClick={handleExplore}
-            className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap"
+            onClick={onExploreServices}
+            className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-3 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span>Explore Services</span>
+            <span>Request Service Proposal</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 
-        {/* 5 Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+        {/* 6 Services Grid (3 cols on desktop, 2 on tablet, 1 on mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {services.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
-                onClick={() => handleCardClick(item)}
-                className="group p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-brand-red/50 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className="group p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 hover:border-brand-red/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
-                  {/* Red Outline Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-red-50/60 border border-red-100 flex items-center justify-center mb-4 group-hover:bg-brand-red group-hover:border-brand-red transition-all">
-                    <Icon className="w-6 h-6 text-brand-red group-hover:text-white transition-colors" />
+                  <div className="flex items-center justify-between mb-5">
+                    {/* Red Outline Icon */}
+                    <div className="w-12 h-12 rounded-2xl bg-red-50/70 border border-red-100 flex items-center justify-center group-hover:bg-brand-red group-hover:border-brand-red transition-all duration-300 shadow-2xs">
+                      <Icon className="w-6 h-6 text-brand-red group-hover:text-white transition-colors" />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 group-hover:text-brand-red transition-colors bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                      {item.highlight}
+                    </span>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-red transition-colors mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-brand-red transition-colors mb-2.5 leading-snug">
                     {item.title}
                   </h3>
 
-                  <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
                     {item.description}
                   </p>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center text-[11px] font-semibold text-brand-red opacity-80 group-hover:opacity-100">
-                  <span>Learn more</span>
-                  <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             );

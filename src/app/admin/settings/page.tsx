@@ -3,35 +3,71 @@
 import React, { useState } from "react";
 import { 
   Settings, 
-  Database, 
-  CloudLightning, 
   Building2, 
-  ShieldCheck, 
   Save, 
-  Server
 } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [companySettings, setCompanySettings] = useState({
     companyName: "ABCO Food Supply (AFS)",
     crNumber: "2050123456",
     sfdaNumber: "SFDA-FS-2026-9918",
-    email: "procurement@abcofoodsupply.com",
+    email: "abcofoodsupply@gmail.com",
     phone: "+966 50 123 4567",
     address: "Jubail Industrial City, Support Services Area 1, Eastern Province, KSA",
     coldCapacity: "18,500 m³ (-18°C to +4°C)",
     fleetCount: "45 GPS Temperature-Monitored Reefer Units",
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  React.useEffect(() => {
+    async function loadSettings() {
+      try {
+        setIsLoading(true);
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setCompanySettings({
+              companyName: json.data.company_name || json.data.companyName || "ABCO Food Supply (AFS)",
+              crNumber: json.data.cr_number || json.data.crNumber || "2050123456",
+              sfdaNumber: json.data.sfda_number || json.data.sfdaNumber || "SFDA-FS-2026-9918",
+              email: json.data.email || "abcofoodsupply@gmail.com",
+              phone: json.data.phone || "+966 50 123 4567",
+              address: json.data.address || "Jubail Industrial City, Support Services Area 1, Eastern Province, KSA",
+              coldCapacity: json.data.cold_capacity || json.data.coldCapacity || "18,500 m³ (-18°C to +4°C)",
+              fleetCount: json.data.fleet_count || json.data.fleetCount || "45 GPS Temperature-Monitored Reefer Units",
+            });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(companySettings),
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
       alert("Depot settings and configuration updated successfully!");
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save settings to database.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -47,74 +83,6 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      {/* Cloud & Database Integrations Status: White card */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
-          <Server className="w-5 h-5 text-emerald-600" />
-          <span>Active Backend Infrastructure</span>
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Supabase Box */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm">
-                <Database className="w-4 h-4 text-emerald-600" />
-                <span>Supabase Cloud PostgreSQL</span>
-              </div>
-              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Connected
-              </span>
-            </div>
-
-            <div className="space-y-1 text-xs">
-              <div className="text-slate-500 font-medium">REST Endpoint:</div>
-              <div className="font-mono text-slate-900 font-bold bg-white p-2 rounded-lg text-[11px] break-all border border-slate-200">
-                https://exrgcryuyhkwpqsyciif.supabase.co
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 font-medium">
-              <span>Region: AWS ap-south-1</span>
-              <span className="text-emerald-700 font-bold">Port 5432 Pooler</span>
-            </div>
-          </div>
-
-          {/* ImageKit Box */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm">
-                <CloudLightning className="w-4 h-4 text-cyan-600" />
-                <span>ImageKit CDN Storage</span>
-              </div>
-              <span className="bg-cyan-100 text-cyan-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                Active
-              </span>
-            </div>
-
-            <div className="space-y-1 text-xs">
-              <div className="text-slate-500 font-medium">CDN URL Endpoint:</div>
-              <div className="font-mono text-slate-900 font-bold bg-white p-2 rounded-lg text-[11px] break-all border border-slate-200">
-                https://ik.imagekit.io/wg5w5t4nz
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 font-medium">
-              <span>Auto WebP / AVIF Optimization</span>
-              <span className="text-cyan-700 font-bold">Edge Accelerated</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 font-medium flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-brand-red shrink-0" />
-          <span>
-            API tokens and service keys are protected inside <code className="text-slate-900 font-bold">.env</code> and strictly excluded via <code className="text-slate-900 font-bold">.gitignore</code>.
-          </span>
-        </div>
-      </div>
 
       {/* Facility & Profile Settings Form: White card */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">

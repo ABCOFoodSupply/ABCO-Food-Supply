@@ -50,6 +50,7 @@ interface Product {
   certification: string;
   description: string;
   specs: Record<string, string>;
+  featured_on_homepage?: boolean;
   created_at?: string;
 }
 
@@ -115,6 +116,7 @@ export default function AdminProductsPage() {
     shelf_life: "24 Months",
     certification: "SFDA Compliant, Halal",
     description: "",
+    featured_on_homepage: false,
     specs: {} as Record<string, string>,
     // extra spec fields (key-value pairs for dynamic specs)
     specKey1: "",
@@ -288,6 +290,7 @@ export default function AdminProductsPage() {
       shelf_life: p.shelf_life || "24 Months",
       certification: p.certification || "SFDA Compliant, Halal",
       description: p.description || "",
+      featured_on_homepage: Boolean(p.featured_on_homepage),
       specs: p.specs || {},
       specKey1: specEntries[0]?.[0] || "",
       specVal1: specEntries[0]?.[1] || "",
@@ -321,6 +324,7 @@ export default function AdminProductsPage() {
       shelf_life: prodForm.shelf_life,
       certification: prodForm.certification,
       description: prodForm.description,
+      featured_on_homepage: prodForm.featured_on_homepage,
       specs,
     };
 
@@ -346,6 +350,7 @@ export default function AdminProductsPage() {
         shelf_life: "24 Months",
         certification: "SFDA Compliant, Halal",
         description: "",
+        featured_on_homepage: false,
         specs: {},
         specKey1: "",
         specVal1: "",
@@ -357,6 +362,28 @@ export default function AdminProductsPage() {
       fetchProducts();
     } catch (err) {
       toast.error(`Error: ${err}`);
+    }
+  };
+
+  // ── Product: toggle homepage featured ─────────────────────────────────────
+  const handleToggleProductFeatured = async (product: Product) => {
+    try {
+      const nextVal = !product.featured_on_homepage;
+      const res = await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id, featured_on_homepage: nextVal }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error("Toggle failed");
+      toast.success(
+        nextVal
+          ? `"${product.name}" is now featured on Homepage!`
+          : `"${product.name}" removed from Homepage featured.`
+      );
+      fetchProducts();
+    } catch {
+      toast.error("Could not update homepage featured status");
     }
   };
 
@@ -430,6 +457,7 @@ export default function AdminProductsPage() {
                 shelf_life: "24 Months",
                 certification: "SFDA Compliant, Halal",
                 description: "",
+                featured_on_homepage: false,
                 specs: {},
                 specKey1: "",
                 specVal1: "",
@@ -660,6 +688,7 @@ export default function AdminProductsPage() {
                       <th className="py-3.5 px-4">Origin & Storage</th>
                       <th className="py-3.5 px-4">Packaging & MOQ</th>
                       <th className="py-3.5 px-4">Standard</th>
+                      <th className="py-3.5 px-4 text-center">Homepage</th>
                       <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -709,6 +738,29 @@ export default function AdminProductsPage() {
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                             <span className="line-clamp-1 max-w-[100px]">{p.certification}</span>
                           </span>
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <button
+                            onClick={() => handleToggleProductFeatured(p)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors cursor-pointer ${
+                              p.featured_on_homepage
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                : "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100"
+                            }`}
+                            title={p.featured_on_homepage ? "Click to remove from Homepage" : "Click to feature on Homepage"}
+                          >
+                            {p.featured_on_homepage ? (
+                              <>
+                                <Eye className="w-3 h-3 text-emerald-600" />
+                                <span>Featured</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-3 h-3" />
+                                <span>Hidden</span>
+                              </>
+                            )}
+                          </button>
                         </td>
                         <td className="py-4 px-4 sm:px-6 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -1087,6 +1139,27 @@ export default function AdminProductsPage() {
                     onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-brand-red resize-none"
                   />
+                </div>
+
+                {/* Homepage Featured Toggle */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <label className="block text-slate-900 font-bold text-xs sm:text-sm">
+                      Feature in &quot;OUR PRODUCTS&quot; on Homepage
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      When enabled, this product will appear directly in the OUR PRODUCTS section on the home page.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={prodForm.featured_on_homepage}
+                      onChange={(e) => setProdForm({ ...prodForm, featured_on_homepage: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
+                  </label>
                 </div>
 
                 {/* Specs (up to 3 key-value pairs) */}

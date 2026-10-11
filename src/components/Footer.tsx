@@ -63,7 +63,7 @@ export const Footer: React.FC = () => {
             {/* Social Icons */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://wa.me/966501234567"
+                href="https://wa.me/966572995987"
                 target="_blank"
                 rel="noreferrer"
                 className="w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
@@ -177,7 +177,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-5 h-5 text-brand-red shrink-0" />
-                <span className="text-slate-600 text-sm sm:text-[15px] font-medium">+966 5X XXX XXXX</span>
+                <span className="text-slate-600 text-sm sm:text-[15px] font-medium">+966 57 299 5987</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-5 h-5 text-brand-red shrink-0" />

@@ -17,7 +17,6 @@ import {
   Sparkles,
   Check,
 } from "lucide-react";
-import { toast } from "sonner";
 
 export const WhyChooseUs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number | null>(null);
@@ -92,9 +91,6 @@ export const WhyChooseUs: React.FC = () => {
 
   const handleCardClick = (strength: (typeof strengths)[0]) => {
     setActiveTab(strength.id);
-    toast.info(`${strength.title}`, {
-      description: strength.desc,
-    });
   };
 
   return (

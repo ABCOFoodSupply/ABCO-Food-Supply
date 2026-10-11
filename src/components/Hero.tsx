@@ -69,26 +69,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
     return () => window.removeEventListener("afs_cms_updated", handleCmsUpdate);
   }, []);
   const heroFeatures = [
-    {
-      title: "Wide Product",
-      subtitle: "Range",
-      icon: Package,
-    },
-    {
-      title: "Reliable",
-      subtitle: "Supply Chain",
-      icon: Truck,
-    },
-    {
-      title: "Timely",
-      subtitle: "Delivery",
-      icon: Clock,
-    },
-    {
-      title: "Competitive",
-      subtitle: "Pricing",
-      icon: BadgePercent,
-    },
+    { stat: "500+", title: "Food Products", icon: Package },
+    { stat: "Trusted", title: "Global Suppliers", icon: Truck },
+    { stat: "Reliable", title: "Supply Chain", icon: Clock },
+    { stat: "Serving KSA", title: "Nationwide", icon: BadgePercent },
   ];
 
   // 9 Categories using authentic categories assets
@@ -209,24 +193,24 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
               />
             </div>
 
-            {/* 4 Feature Badges with Red Outline Icons */}
+            {/* 4 Feature Badges - Fully Responsive */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-2xl pt-1">
               {heroFeatures.map((feat) => {
                 const Icon = feat.icon;
                 return (
                   <div
-                    key={feat.title + feat.subtitle}
-                    className="flex items-center gap-2.5 p-3 rounded-xl border border-red-200/90 bg-white shadow-2xs hover:border-brand-red hover:shadow-xs transition-all group"
+                    key={feat.stat}
+                    className="flex items-center gap-2.5 p-3 rounded-xl border border-red-200/90 bg-white shadow-2xs hover:border-brand-red hover:shadow-xs transition-all group min-w-0"
                   >
                     <div className="w-9 h-9 rounded-lg bg-red-50/80 border border-red-100 flex items-center justify-center shrink-0 group-hover:bg-brand-red transition-colors">
-                      <Icon className="w-4.5 h-4.5 text-brand-red group-hover:text-white transition-colors" />
+                      <Icon className="w-4 h-4 text-brand-red group-hover:text-white transition-colors" />
                     </div>
-                    <div className="leading-tight">
-                      <p className="text-xs sm:text-sm font-bold text-slate-900">
-                        {feat.title}
+                    <div className="leading-tight min-w-0">
+                      <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                        {feat.stat}
                       </p>
-                      <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                        {feat.subtitle}
+                      <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate">
+                        {feat.title}
                       </p>
                     </div>
                   </div>

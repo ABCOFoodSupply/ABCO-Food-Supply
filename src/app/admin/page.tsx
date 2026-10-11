@@ -159,7 +159,7 @@ export default function AdminDashboardPage() {
               className="inline-flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white px-5 py-3 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-brand-red/25 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4 text-white" />
-              <span>Add New SKU</span>
+              <span>Add Products & Categories</span>
             </Link>
 
             <Link
@@ -167,7 +167,7 @@ export default function AdminDashboardPage() {
               className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-900 hover:text-brand-red px-5 py-3 rounded-xl text-xs sm:text-sm font-bold border border-slate-300 shadow-2xs transition-all cursor-pointer"
             >
               <CloudLightning className="w-4 h-4 text-cyan-600" />
-              <span>ImageKit CDN</span>
+              <span>Add Media</span>
             </Link>
           </div>
         </div>

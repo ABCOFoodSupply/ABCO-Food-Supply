@@ -109,16 +109,16 @@ export const AboutUs: React.FC<AboutUsProps> = ({ onLearnMore }) => {
             return (
               <div
                 key={stat.label}
-                className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-brand-red/40 hover:shadow-md transition-all group"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-brand-red/40 hover:shadow-md transition-all group min-w-0"
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-brand-red flex items-center justify-center shrink-0 bg-red-50/60 group-hover:bg-brand-red transition-colors">
-                  <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-brand-red group-hover:text-white transition-colors" />
+                <div className="w-10 h-10 sm:w-12 md:w-14 sm:h-12 md:h-14 rounded-full border-2 border-brand-red flex items-center justify-center shrink-0 bg-red-50/60 group-hover:bg-brand-red transition-colors">
+                  <Icon className="w-5 h-5 sm:w-6 md:w-7 sm:h-6 md:h-7 text-brand-red group-hover:text-white transition-colors" />
                 </div>
-                <div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg sm:text-2xl md:text-3xl font-black text-slate-900 leading-tight truncate">
                     {stat.value}
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 font-bold leading-tight mt-1">
+                  <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 font-bold leading-tight mt-0.5 sm:mt-1 break-words">
                     {stat.label}
                   </p>
                 </div>

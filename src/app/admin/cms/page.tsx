@@ -46,8 +46,8 @@ export default function AdminHomePageCmsPage() {
 
   const [isAddPartnerOpen, setIsAddPartnerOpen] = useState(false);
   const [newPartnerName, setNewPartnerName] = useState("");
-  const [newPartnerImage, setNewPartnerImage] = useState("/categories/partner-1.png");
-  const [newPartnerType, setNewPartnerType] = useState("Hypermarket Chain");
+  const [newPartnerImage, setNewPartnerImage] = useState("");
+  const [newPartnerType, setNewPartnerType] = useState("");
   const [newPartnerLocation, setNewPartnerLocation] = useState("Kingdom of Saudi Arabia");
 
   // Load from Supabase DB on mount
@@ -249,7 +249,8 @@ export default function AdminHomePageCmsPage() {
 
     // Reset modal
     setNewPartnerName("");
-    setNewPartnerImage("/categories/partner-1.png");
+    setNewPartnerType("");
+    setNewPartnerImage("");
     setIsAddPartnerOpen(false);
   };
 

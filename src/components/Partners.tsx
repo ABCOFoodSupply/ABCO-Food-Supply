@@ -70,10 +70,8 @@ export const Partners: React.FC = () => {
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
-  const handlePartnerClick = (name: string) => {
-    toast.success(`Partner: ${name}`, {
-      description: "Supplying bulk fresh & packaged food commodities across KSA outlets.",
-    });
+  const handlePartnerClick = (_name: string) => {
+    // No-op: toast disabled on card click
   };
 
   return (
@@ -90,7 +88,7 @@ export const Partners: React.FC = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <button
               onClick={() => toast.info("Displaying all retail and hypermarket partners across Saudi Arabia.")}
               className="text-brand-red border border-brand-red/40 hover:bg-brand-red hover:text-white px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide transition-all flex items-center gap-1.5 cursor-pointer"
@@ -98,7 +96,7 @@ export const Partners: React.FC = () => {
               <span>View All Partners</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* WORKING SLIDER CONTAINER */}

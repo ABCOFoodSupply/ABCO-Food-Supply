@@ -16,7 +16,9 @@ import {
   RotateCcw,
   SlidersHorizontal,
   ChevronDown,
+  ChevronLeft,
   Loader2,
+  MessageCircle,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -68,6 +70,10 @@ function ProductsContent() {
 
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
   const [enquirySubject, setEnquirySubject] = useState("");
+
+  // Pagination
+  const ITEMS_PER_PAGE = 12;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── Fetch Data ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -151,12 +157,24 @@ function ProductsContent() {
       });
   }, [products, searchQuery, selectedCategory, selectedOrigin, selectedStorage, sortBy]);
 
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedOrigin, selectedStorage, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setSelectedOrigin("all");
     setSelectedStorage("all");
     setSortBy("recommended");
+    setCurrentPage(1);
     if (typeof window !== "undefined") {
       window.history.pushState(null, "", "/products");
     }
@@ -380,96 +398,204 @@ function ProductsContent() {
                   <Loader2 className="w-10 h-10 text-brand-red animate-spin" />
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-red/40 hover:shadow-xl shadow-sm transition-all flex flex-col group overflow-hidden"
-                    >
-                      {/* Card Image */}
-                      <Link
-                        href={`/products/${product.category_slug}/${product.id}`}
-                        className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 flex items-center justify-center overflow-hidden"
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {paginatedProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-red/40 hover:shadow-xl shadow-sm transition-all flex flex-col group overflow-hidden"
                       >
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          />
-                        ) : (
-                          <Package className="w-16 h-16 text-slate-300" />
-                        )}
-
-                        {/* Origin Tag */}
-                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-slate-800 border border-slate-200/80 shadow-2xs">
-                          {product.origin}
-                        </div>
-
-                        {/* Storage Tag */}
-                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-brand-red border border-slate-200/80 shadow-2xs">
-                          {product.storage_type}
-                        </div>
-                      </Link>
-
-                      {/* Card Info */}
-                      <div className="p-5 space-y-3 flex-1">
-                        <Link
-                          href={`/products?category=${product.category_slug}`}
-                          className="text-xs font-black uppercase tracking-wider text-brand-red hover:underline block"
-                        >
-                          {product.category_name}
-                        </Link>
-
+                        {/* Card Image */}
                         <Link
                           href={`/products/${product.category_slug}/${product.id}`}
-                          className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-red transition-colors leading-snug block"
+                          className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 flex items-center justify-center overflow-hidden"
                         >
-                          {product.name}
+                          {product.image ? (
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              fill
+                              className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                            />
+                          ) : (
+                            <Package className="w-16 h-16 text-slate-300" />
+                          )}
+
+                          {/* Origin Tag */}
+                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-slate-800 border border-slate-200/80 shadow-2xs">
+                            {product.origin}
+                          </div>
+
+                          {/* Storage Tag */}
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-brand-red border border-slate-200/80 shadow-2xs">
+                            {product.storage_type}
+                          </div>
                         </Link>
 
-                        <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed line-clamp-2">
-                          {product.description}
-                        </p>
+                        {/* Card Info */}
+                        <div className="p-5 space-y-3 flex-1">
+                          <Link
+                            href={`/products?category=${product.category_slug}`}
+                            className="text-xs font-black uppercase tracking-wider text-brand-red hover:underline block"
+                          >
+                            {product.category_name}
+                          </Link>
 
-                        {/* Specs */}
-                        <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">MOQ:</span>
-                            <span className="font-bold text-slate-800">{product.moq}</span>
+                          <Link
+                            href={`/products/${product.category_slug}/${product.id}`}
+                            className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-red transition-colors leading-snug block"
+                          >
+                            {product.name}
+                          </Link>
+
+                          <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed line-clamp-2">
+                            {product.description}
+                          </p>
+
+                          {/* Specs */}
+                          <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">MOQ:</span>
+                              <span className="font-bold text-slate-800">{product.moq}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Packaging:</span>
+                              <span className="font-semibold text-slate-700 truncate max-w-[170px]">{product.packaging}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Standard:</span>
+                              <span className="font-semibold text-emerald-600 truncate">{product.certification}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">Packaging:</span>
-                            <span className="font-semibold text-slate-700 truncate max-w-[170px]">{product.packaging}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">Standard:</span>
-                            <span className="font-semibold text-emerald-600 truncate">{product.certification}</span>
-                          </div>
+                        </div>
+
+                        {/* Card Actions */}
+                        <div className="p-5 pt-0 flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenProductEnquiry(product)}
+                            className="flex-1 bg-brand-red hover:bg-red-700 text-white py-2.5 rounded-full text-xs font-bold shadow-sm hover:shadow transition-all text-center cursor-pointer"
+                          >
+                            Enquire Now
+                          </button>
+                          <a
+                            href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to request wholesale pricing for ${product.name} (${product.category_name}).`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="w-9 h-9 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow-sm"
+                            title="Quick WhatsApp Enquiry"
+                            aria-label={`WhatsApp Enquiry for ${product.name}`}
+                          >
+                            <MessageCircle className="w-4 h-4 fill-current" />
+                          </a>
+                          <Link
+                            href={`/products/${product.category_slug}/${product.id}`}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors"
+                            title="View Full Product Details"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Link>
                         </div>
                       </div>
+                    ))}
+                  </div>
 
-                      {/* Card Actions */}
-                      <div className="p-5 pt-0 flex items-center gap-2.5">
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80">
+                      <p className="text-xs sm:text-sm text-slate-500 font-medium order-2 sm:order-1">
+                        Showing{" "}
+                        <span className="font-bold text-slate-900">
+                          {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-bold text-slate-900">
+                          {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-bold text-slate-900">
+                          {filteredProducts.length}
+                        </span>{" "}
+                        products
+                      </p>
+
+                      <div className="flex items-center gap-1.5 order-1 sm:order-2">
                         <button
-                          onClick={() => handleOpenProductEnquiry(product)}
-                          className="flex-1 bg-brand-red hover:bg-red-700 text-white py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all text-center cursor-pointer"
+                          onClick={() => {
+                            setCurrentPage((p) => Math.max(1, p - 1));
+                            window.scrollTo({ top: 300, behavior: "smooth" });
+                          }}
+                          disabled={currentPage === 1}
+                          className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all cursor-pointer"
+                          aria-label="Previous page"
                         >
-                          Enquire Now
+                          <ChevronLeft className="w-4 h-4" />
+                          <span className="hidden sm:inline">Prev</span>
                         </button>
-                        <Link
-                          href={`/products/${product.category_slug}/${product.id}`}
-                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-full transition-colors"
-                          title="View Full Product Details"
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((page) => {
+                            // Show first, last, current, and adjacent pages
+                            return (
+                              page === 1 ||
+                              page === totalPages ||
+                              Math.abs(page - currentPage) <= 1
+                            );
+                          })
+                          .reduce<(number | string)[]>((acc, page, idx, arr) => {
+                            if (idx > 0 && page - (arr[idx - 1] as number) > 1) {
+                              acc.push("...");
+                            }
+                            acc.push(page);
+                            return acc;
+                          }, [])
+                          .map((item, idx) => {
+                            if (item === "...") {
+                              return (
+                                <span
+                                  key={`ellipsis-${idx}`}
+                                  className="px-2 py-1 text-slate-400 text-xs font-bold"
+                                >
+                                  ...
+                                </span>
+                              );
+                            }
+                            const pageNum = item as number;
+                            const isActive = pageNum === currentPage;
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  window.scrollTo({ top: 300, behavior: "smooth" });
+                                }}
+                                className={`w-9 h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  isActive
+                                    ? "bg-brand-red text-white shadow-md shadow-brand-red/25"
+                                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+
+                        <button
+                          onClick={() => {
+                            setCurrentPage((p) => Math.min(totalPages, p + 1));
+                            window.scrollTo({ top: 300, behavior: "smooth" });
+                          }}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all cursor-pointer"
+                          aria-label="Next page"
                         >
+                          <span className="hidden sm:inline">Next</span>
                           <ChevronRight className="w-4 h-4" />
-                        </Link>
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               ) : (
                 <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/90 space-y-4">
                   <div className="w-16 h-16 rounded-full bg-red-50 text-brand-red flex items-center justify-center mx-auto">

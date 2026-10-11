@@ -1,221 +1,251 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowRight, Package, Sparkles, MessageCircle } from "lucide-react";
+
+interface ProductItem {
+  id: string;
+  name: string;
+  category_slug: string;
+  category_name: string;
+  image: string;
+  origin?: string;
+  storage_type?: string;
+  moq?: string;
+  packaging?: string;
+  description?: string;
+  featured_on_homepage?: boolean;
+}
+
+interface CategoryItem {
+  id: string;
+  slug: string;
+  title: string;
+  image: string;
+}
+
+const FALLBACK_CATEGORIES: CategoryItem[] = [
+  { id: "c-1", slug: "rice-and-grains", title: "Rice & Grains", image: "/categories/rice-and-grains.png" },
+  { id: "c-2", slug: "meat", title: "Meat", image: "/categories/meat.png" },
+  { id: "c-3", slug: "seafood", title: "Seafood", image: "/categories/seafood.png" },
+  { id: "c-4", slug: "poultry", title: "Poultry", image: "/categories/poultry.png" },
+  { id: "c-5", slug: "dairy", title: "Dairy Products", image: "/categories/dairy.png" },
+  { id: "c-6", slug: "edible-oils", title: "Edible Oils", image: "/categories/edible-oils.png" },
+];
 
 interface ProductCategoriesProps {
   onSelectCategory?: (category: string) => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCategory }) => {
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [featuredProducts, setFeaturedProducts] = useState<ProductItem[]>([]);
+  const [categoriesFallback, setCategoriesFallback] = useState<CategoryItem[]>(FALLBACK_CATEGORIES);
+  const [loading, setLoading] = useState(true);
 
-  // 12 Authentic food categories using official categories assets
-  const products = [
-    {
-      id: "rice-grains",
-      slug: "rice-and-grains",
-      title: "Rice & Grains",
-      image: "/categories/rice-and-grains.png",
-      description: "Basmati rice, Jasmine rice, wheat grains, pulses, lentils, and bulk flours sourced globally.",
-      itemsCount: "45+ Varieties",
-    },
-    {
-      id: "meat",
-      slug: "meat",
-      title: "Meat",
-      image: "/categories/meat.png",
-      description: "Halal certified beef, mutton, lamb, and prime butcher cuts for hospitality and retail.",
-      itemsCount: "30+ Cuts",
-    },
-    {
-      id: "seafood",
-      slug: "seafood",
-      title: "Seafood",
-      image: "/categories/seafood.png",
-      description: "Fresh and frozen salmon, tiger prawns, hammour, seabass, and coastal shellfish on ice.",
-      itemsCount: "25+ Species",
-    },
-    {
-      id: "poultry",
-      slug: "poultry",
-      title: "Poultry",
-      image: "/categories/poultry.png",
-      description: "Whole chilled chicken, boneless breast, thighs, wings, and institutional poultry items.",
-      itemsCount: "20+ Products",
-    },
-    {
-      id: "dairy-products",
-      slug: "dairy",
-      title: "Dairy Products",
-      image: "/categories/dairy.png",
-      description: "Fresh milk, whipping creams, butter, mozzarella, cheddar, feta, and specialty cheeses.",
-      itemsCount: "50+ SKUs",
-    },
-    {
-      id: "edible-oils",
-      slug: "edible-oils",
-      title: "Edible Oils",
-      image: "/categories/edible-oils.png",
-      description: "Sunflower oil, corn oil, extra virgin olive oil, frying shortening, and bulk cooking oils.",
-      itemsCount: "15+ Grades",
-    },
-    {
-      id: "food-ingredients",
-      slug: "food-ingredients",
-      title: "Food Ingredients",
-      image: "/categories/food-ingredients.png",
-      description: "Authentic Arabic spice blends, seasoning powders, cooking pastes, and herbs in bowls.",
-      itemsCount: "80+ Flavors",
-    },
-    {
-      id: "beverages",
-      slug: "beverages",
-      title: "Beverages",
-      image: "/categories/beverages.png",
-      description: "Pure juices, sparkling waters, energy drinks, mineral water cartons, and tea blends.",
-      itemsCount: "60+ Brands",
-    },
-    {
-      id: "fruits-vegetables",
-      slug: "fruits-and-vegetables",
-      title: "Fruits & Vegetables",
-      image: "/categories/fruits-and-vegetables.png",
-      description: "Farm-fresh tomatoes, onions, bell peppers, citrus fruits, and tropical produce.",
-      itemsCount: "100+ Fresh Items",
-    },
-    {
-      id: "canned-packaged",
-      slug: "canned-packaged",
-      title: "Canned & Packaged",
-      image: "/categories/canned-packaged.png",
-      description: "Canned condiments, caramel chutney, tuna, foul mudammas, chickpeas, and sauces.",
-      itemsCount: "70+ Varieties",
-    },
-    {
-      id: "frozen-foods",
-      slug: "frozen-foods",
-      title: "Frozen Foods",
-      image: "/categories/mix-product.png",
-      description: "French fries, frozen green peas, mixed vegetables, burger patties, nuggets, and pastries.",
-      itemsCount: "40+ Lines",
-    },
-    {
-      id: "bakery-confectionery",
-      slug: "bakery-confectionery",
-      title: "Bakery & Confectionery",
-      image: "/categories/rice-and-grains.png",
-      description: "Baking flour, yeast, chocolate chips, Arabic sweets ingredients, and artisan bakery.",
-      itemsCount: "35+ Products",
-    },
-  ];
-
-  const [categoriesList, setCategoriesList] = useState(products);
-
-  React.useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          setCategoriesList(
-            json.data.map((c: any) => ({
-              id: c.id,
-              slug: c.slug,
-              title: c.name,
-              image: c.image || "/categories/rice-and-grains.png",
-              description: c.description || "",
-              itemsCount: "Available",
-            }))
-          );
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        // 1. Fetch featured products with featured=true tag
+        const prodRes = await fetch("/api/products?featured=true", { cache: "no-store" });
+        if (prodRes.ok) {
+          const prodJson = await prodRes.json();
+          if (prodJson.success && Array.isArray(prodJson.data) && prodJson.data.length > 0) {
+            setFeaturedProducts(prodJson.data);
+            setLoading(false);
+            return;
+          }
         }
-      })
-      .catch((err) => console.warn("Failed to load categories dynamically:", err));
+
+        // 2. If no products have featured_on_homepage enabled yet, fetch all products and show first 6
+        const allProdRes = await fetch("/api/products", { cache: "no-store" });
+        if (allProdRes.ok) {
+          const allJson = await allProdRes.json();
+          if (allJson.success && Array.isArray(allJson.data) && allJson.data.length > 0) {
+            // Check if any product has featured flag
+            const flagged = allJson.data.filter((p: any) => p.featured_on_homepage === true);
+            if (flagged.length > 0) {
+              setFeaturedProducts(flagged);
+            } else {
+              // Show first 6 products as initial showcase
+              setFeaturedProducts(allJson.data.slice(0, 6));
+            }
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 3. Fallback to categories list if no products exist
+        const catRes = await fetch("/api/categories", { cache: "no-store" });
+        if (catRes.ok) {
+          const catJson = await catRes.json();
+          if (catJson.success && Array.isArray(catJson.data) && catJson.data.length > 0) {
+            setCategoriesFallback(
+              catJson.data.slice(0, 6).map((c: any) => ({
+                id: c.id,
+                slug: c.slug,
+                title: c.name,
+                image: c.image || "/categories/rice-and-grains.png",
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load featured products for home page:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
   }, []);
 
-  const handleCardClick = (product: { title: string; itemsCount: string }) => {
-    setSelectedCat(product.title);
-    toast.success(`Category Selected: ${product.title}`, {
-      description: `Click "Enquiry Now" to request pricing specifications.`,
-    });
-    if (onSelectCategory) {
-      onSelectCategory(product.title);
-    }
-  };
-
-  const handleViewAll = () => {
-    toast.info("Viewing Full Catalog", {
-      description: "Showing all 12 core food supply product categories across Saudi Arabia.",
-    });
-  };
-
   return (
-    <section id="products" className="py-16 md:py-20 bg-slate-50/60 w-full">
+    <section id="products" className="py-16 md:py-24 bg-slate-50/60 w-full border-t border-slate-200/60">
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
-        {/* Section Header with View All Button */}
+        {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-          <div className="space-y-1">
-            <span className="text-xs sm:text-sm font-bold tracking-wider text-brand-red uppercase">
+          <div className="space-y-1 max-w-2xl">
+            <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-brand-red" />
               OUR PRODUCTS
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Wide Range of Imported & Locally Manufactured Food Products
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Wide Range of Imported &amp; Locally Manufactured Food Products
             </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+              Featured wholesale commodities ready for HORECA, commercial catering, and retail distribution across Saudi Arabia.
+            </p>
           </div>
 
           <Link
             href="/products"
-            className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap"
+            className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-3 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-md transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap shrink-0"
           >
             <span>View All Products</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
-        {/* Product Cards Grid - Uncut, clean, fully visible food images */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
-          {categoriesList.map((product) => {
-            const isSelected = selectedCat === product.title;
-            return (
-              <Link
-                key={product.id}
-                href={`/products?category=${product.slug}`}
-                className={`group rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer flex flex-col bg-white ${
-                  isSelected
-                    ? "border-brand-red ring-2 ring-brand-red/30 shadow-xl -translate-y-1"
-                    : "border-slate-200 hover:border-brand-red/50 hover:shadow-xl hover:-translate-y-1"
-                }`}
+        {/* Dynamic Products Grid */}
+        {loading ? (
+          <div className="py-20 text-center text-slate-400 text-sm font-bold">
+            Loading products...
+          </div>
+        ) : featuredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {featuredProducts.slice(0, 8).map((p) => (
+              <div
+                key={p.id}
+                className="group rounded-3xl overflow-hidden border border-slate-200/90 hover:border-brand-red/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between bg-white"
               >
-                {/* Clean image box with object-contain so food image is 100% visible and unclipped */}
-                <div className="relative aspect-square w-full overflow-hidden bg-slate-50 p-2 flex items-center justify-center">
-                  <Image
-                    src={product.image}
-                    alt={product.title}
-                    fill
-                    className="object-contain p-2 group-hover:scale-108 transition-transform duration-500"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                  />
+                <div>
+                  {/* Product Image */}
+                  <Link
+                    href={`/products/${p.category_slug}/${p.id}`}
+                    className="relative aspect-square w-full overflow-hidden bg-slate-50 p-3 flex items-center justify-center block border-b border-slate-100"
+                  >
+                    {p.image ? (
+                      <Image
+                        src={p.image}
+                        alt={p.name}
+                        fill
+                        className="object-contain p-3 group-hover:scale-108 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <Package className="w-12 h-12 text-slate-300 m-auto" />
+                    )}
 
-                  {/* Selected Badge */}
-                  {isSelected && (
-                    <div className="absolute top-2.5 right-2.5 bg-brand-red text-white p-1 rounded-full shadow-md z-10">
-                      <Check className="w-3.5 h-3.5" />
-                    </div>
-                  )}
+                    {/* Featured Pill */}
+                    {p.featured_on_homepage && (
+                      <span className="absolute top-2.5 left-2.5 bg-brand-red text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
+                        Featured
+                      </span>
+                    )}
+
+                    {p.storage_type && (
+                      <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-xs text-[10px] font-bold text-slate-700 px-2 py-0.5 rounded-full border border-slate-200 shadow-2xs">
+                        {p.storage_type}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Product Info */}
+                  <div className="p-4 space-y-1.5">
+                    <Link
+                      href={`/products?category=${p.category_slug}`}
+                      className="text-[11px] font-black uppercase tracking-wider text-brand-red hover:underline block truncate"
+                    >
+                      {p.category_name}
+                    </Link>
+
+                    <Link
+                      href={`/products/${p.category_slug}/${p.id}`}
+                      className="text-sm font-bold text-slate-900 group-hover:text-brand-red transition-colors line-clamp-1 block leading-snug"
+                      title={p.name}
+                    >
+                      {p.name}
+                    </Link>
+
+                    {p.moq && (
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        MOQ: <strong className="text-slate-800">{p.moq}</strong>
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Card Title Label */}
-                <div className="p-3 text-center flex-1 flex flex-col justify-center border-t border-slate-100 bg-white">
-                  <h3 className="text-sm sm:text-base font-bold text-slate-800 group-hover:text-brand-red transition-colors line-clamp-1">
-                    {product.title}
+                {/* Card Actions */}
+                <div className="p-4 pt-0 border-t border-slate-100 mt-2 flex items-center justify-between gap-2">
+                  <Link
+                    href={`/products/${p.category_slug}/${p.id}`}
+                    className="flex-1 text-center py-2 px-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
+                  >
+                    Details
+                  </Link>
+                  <a
+                    href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to enquire about ${p.name} (${p.category_name}).`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-8 h-8 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow-2xs"
+                    title="WhatsApp Inquiry"
+                    aria-label={`WhatsApp Inquiry for ${p.name}`}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Categories Fallback Grid */
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+            {categoriesFallback.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/products?category=${cat.slug}`}
+                className="group rounded-3xl overflow-hidden border border-slate-200/90 hover:border-brand-red/50 hover:shadow-xl transition-all duration-300 flex flex-col bg-white"
+              >
+                <div className="relative aspect-square w-full overflow-hidden bg-slate-50 p-2 flex items-center justify-center">
+                  <Image
+                    src={cat.image}
+                    alt={cat.title}
+                    fill
+                    className="object-contain p-3 group-hover:scale-108 transition-transform duration-500"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                  />
+                </div>
+                <div className="p-3 text-center border-t border-slate-100 bg-white">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-brand-red transition-colors line-clamp-1">
+                    {cat.title}
                   </h3>
                 </div>
               </Link>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
