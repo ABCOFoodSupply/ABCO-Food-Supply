@@ -7,59 +7,103 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ className = "h-12", variant = "full" }) => {
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Stylized AFS Brand Badge */}
-      <div className="relative flex items-center justify-center">
-        <svg
-          viewBox="0 0 160 60"
-          className="h-10 md:h-12 w-auto"
+    <div className={`inline-flex items-center select-none ${className}`}>
+      <svg
+        viewBox="0 0 200 74"
+        className="h-10 sm:h-12 md:h-14 w-auto max-w-[170px] sm:max-w-[195px] md:max-w-[220px]"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label="ABCO Food Supply (AFS)"
+      >
+        {/* Top Green Swoosh Arc over F and S */}
+        <path
+          d="M 64,13 C 98,-3 146,0 174,18"
+          stroke="#009640"
+          strokeWidth="3.8"
+          strokeLinecap="round"
           fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Top Green Accent Arc */}
-          <path
-            d="M 20,12 Q 80,-4 140,12"
-            stroke="#009640"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* AFS Bold Letters */}
-          <g fontWeight="900" fontFamily="system-ui, -apple-system, sans-serif" fontStyle="italic">
-            <text x="12" y="38" fill="#e31837" fontSize="32" letterSpacing="-1">
-              A
-            </text>
-            <text x="44" y="38" fill="#1e293b" fontSize="32" letterSpacing="-1">
-              F
-            </text>
-            <text x="72" y="38" fill="#e31837" fontSize="32" letterSpacing="-1">
-              S
-            </text>
-          </g>
-          {/* Bottom Green swoosh */}
-          <path
-            d="M 12,46 Q 75,54 145,44"
-            stroke="#009640"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* Subtle wheat / leaf accent icon */}
-          <circle cx="138" cy="20" r="3" fill="#009640" />
-          <circle cx="144" cy="16" r="2" fill="#e31837" />
-        </svg>
-      </div>
+        />
 
-      {variant !== "icon" && (
-        <div className="flex flex-col border-l border-slate-200 pl-2.5">
-          <span className="font-black text-sm md:text-base tracking-wider text-slate-900 leading-none">
-            ABCO FOOD SUPPLY
-          </span>
-          <span className="text-[10px] md:text-[11px] font-semibold text-brand-red tracking-tight mt-0.5">
-            Leading Food, Reliable Quality
-          </span>
-        </div>
-      )}
+        {/* --- MAIN AFS LETTERS --- */}
+        <g fontWeight="950" fontStyle="italic" fontFamily="system-ui, -apple-system, sans-serif">
+          {/* Bold Red 'A' */}
+          <text
+            x="8"
+            y="42"
+            fill="#e31837"
+            fontSize="46"
+            letterSpacing="-1.5"
+          >
+            A
+          </text>
+
+          {/* Bold Dark Navy 'F' */}
+          <text
+            x="50"
+            y="42"
+            fill="#0b1c3d"
+            fontSize="46"
+            letterSpacing="-1.5"
+          >
+            F
+          </text>
+
+          {/* Bold Dark Navy 'S' */}
+          <text
+            x="86"
+            y="42"
+            fill="#0b1c3d"
+            fontSize="46"
+            letterSpacing="-1.5"
+          >
+            S
+          </text>
+        </g>
+
+        {/* Green leaf accent inside the letter 'A' */}
+        <path
+          d="M 26,29 C 24,35 29,39 32,37 C 34,35 34,31 30,27 C 28,25 26,27 26,29 Z"
+          fill="#009640"
+        />
+
+        {variant !== "icon" && (
+          <>
+            {/* --- MIDDLE ROW: ABCO FOOD SUPPLY --- */}
+            <g
+              fontSize="14"
+              fontWeight="900"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              letterSpacing="0.8"
+            >
+              {/* ABCO in Navy */}
+              <text x="8" y="58" fill="#0b1c3d">
+                ABCO
+              </text>
+              {/* FOOD in Red */}
+              <text x="58" y="58" fill="#e31837">
+                FOOD
+              </text>
+              {/* SUPPLY in Navy */}
+              <text x="106" y="58" fill="#0b1c3d">
+                SUPPLY
+              </text>
+            </g>
+
+            {/* --- BOTTOM ROW: TAGLINE --- */}
+            <text
+              x="9"
+              y="70"
+              fontSize="8.5"
+              fontWeight="600"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fill="#475569"
+              letterSpacing="0.4"
+            >
+              Quality Food, Reliable Supply
+            </text>
+          </>
+        )}
+      </svg>
     </div>
   );
 };

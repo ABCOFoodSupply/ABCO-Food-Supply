@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
   const products = [
     {
       id: "rice-grains",
+      slug: "rice-and-grains",
       title: "Rice & Grains",
       image: "/categories/rice-and-grains.png",
       description: "Basmati rice, Jasmine rice, wheat grains, pulses, lentils, and bulk flours sourced globally.",
@@ -23,6 +25,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "meat",
+      slug: "meat",
       title: "Meat",
       image: "/categories/meat.png",
       description: "Halal certified beef, mutton, lamb, and prime butcher cuts for hospitality and retail.",
@@ -30,6 +33,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "seafood",
+      slug: "seafood",
       title: "Seafood",
       image: "/categories/seafood.png",
       description: "Fresh and frozen salmon, tiger prawns, hammour, seabass, and coastal shellfish on ice.",
@@ -37,6 +41,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "poultry",
+      slug: "poultry",
       title: "Poultry",
       image: "/categories/poultry.png",
       description: "Whole chilled chicken, boneless breast, thighs, wings, and institutional poultry items.",
@@ -44,6 +49,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "dairy-products",
+      slug: "dairy",
       title: "Dairy Products",
       image: "/categories/dairy.png",
       description: "Fresh milk, whipping creams, butter, mozzarella, cheddar, feta, and specialty cheeses.",
@@ -51,6 +57,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "edible-oils",
+      slug: "edible-oils",
       title: "Edible Oils",
       image: "/categories/edible-oils.png",
       description: "Sunflower oil, corn oil, extra virgin olive oil, frying shortening, and bulk cooking oils.",
@@ -58,6 +65,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "food-ingredients",
+      slug: "food-ingredients",
       title: "Food Ingredients",
       image: "/categories/food-ingredients.png",
       description: "Authentic Arabic spice blends, seasoning powders, cooking pastes, and herbs in bowls.",
@@ -65,6 +73,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "beverages",
+      slug: "beverages",
       title: "Beverages",
       image: "/categories/beverages.png",
       description: "Pure juices, sparkling waters, energy drinks, mineral water cartons, and tea blends.",
@@ -72,6 +81,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "fruits-vegetables",
+      slug: "fruits-and-vegetables",
       title: "Fruits & Vegetables",
       image: "/categories/fruits-and-vegetables.png",
       description: "Farm-fresh tomatoes, onions, bell peppers, citrus fruits, and tropical produce.",
@@ -79,6 +89,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "canned-packaged",
+      slug: "canned-packaged",
       title: "Canned & Packaged",
       image: "/categories/canned-packaged.png",
       description: "Canned condiments, caramel chutney, tuna, foul mudammas, chickpeas, and sauces.",
@@ -86,6 +97,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "frozen-foods",
+      slug: "frozen-foods",
       title: "Frozen Foods",
       image: "/categories/mix-product.png",
       description: "French fries, frozen green peas, mixed vegetables, burger patties, nuggets, and pastries.",
@@ -93,6 +105,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
     {
       id: "bakery-confectionery",
+      slug: "bakery-confectionery",
       title: "Bakery & Confectionery",
       image: "/categories/rice-and-grains.png",
       description: "Baking flour, yeast, chocolate chips, Arabic sweets ingredients, and artisan bakery.",
@@ -130,13 +143,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
             </h2>
           </div>
 
-          <button
-            onClick={handleViewAll}
+          <Link
+            href="/products"
             className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap"
           >
             <span>View All Products</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
         </div>
 
         {/* 12 Product Cards Grid - Uncut, clean, fully visible food images */}
@@ -144,9 +157,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
           {products.map((product) => {
             const isSelected = selectedCat === product.title;
             return (
-              <div
+              <Link
                 key={product.id}
-                onClick={() => handleCardClick(product)}
+                href={`/products?category=${product.slug}`}
                 className={`group rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer flex flex-col bg-white ${
                   isSelected
                     ? "border-brand-red ring-2 ring-brand-red/30 shadow-xl -translate-y-1"
@@ -177,7 +190,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
                     {product.title}
                   </h3>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

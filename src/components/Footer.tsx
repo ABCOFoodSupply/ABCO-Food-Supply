@@ -14,12 +14,12 @@ import { Logo } from "./Logo";
 
 export const Footer: React.FC = () => {
   const quickLinks = [
-    { name: "Home", href: "#hero" },
-    { name: "About Us", href: "#about" },
-    { name: "Products", href: "#products" },
-    { name: "Services", href: "#services" },
-    { name: "Gallery", href: "#gallery" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "/" },
+    { name: "About Us", href: "/about" },
+    { name: "Products", href: "/products" },
+    { name: "Services", href: "/#services" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "Contact", href: "/contact" },
   ];
 
   const ourServices = [
@@ -32,21 +32,21 @@ export const Footer: React.FC = () => {
   ];
 
   const categoriesLeft = [
-    "Rice & Grains",
-    "Meat",
-    "Seafood",
-    "Poultry",
-    "Dairy Products",
-    "Edible Oils",
+    { name: "Rice & Grains", slug: "rice-and-grains" },
+    { name: "Meat", slug: "meat" },
+    { name: "Seafood", slug: "seafood" },
+    { name: "Poultry", slug: "poultry" },
+    { name: "Dairy Products", slug: "dairy" },
+    { name: "Edible Oils", slug: "edible-oils" },
   ];
 
   const categoriesRight = [
-    "Food Ingredients",
-    "Beverages",
-    "Fruits & Vegetables",
-    "Canned & Packaged",
-    "Frozen Foods",
-    "Bakery & Confectionery",
+    { name: "Food Ingredients", slug: "food-ingredients" },
+    { name: "Beverages", slug: "beverages" },
+    { name: "Fruits & Vegetables", slug: "fruits-and-vegetables" },
+    { name: "Canned & Packaged", slug: "canned-packaged" },
+    { name: "Frozen Foods", slug: "frozen-foods" },
+    { name: "Bakery & Confectionery", slug: "bakery-confectionery" },
   ];
 
   return (
@@ -102,12 +102,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2.5">
               {quickLinks.map((item) => (
                 <li key={item.name}>
-                  <a
+                  <Link
                     href={item.href}
                     className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -121,13 +121,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2.5">
               {ourServices.map((service) => (
                 <li key={service}>
-                  <a
-                    href="#services"
-                    onClick={() => toast.info(`Service detail: ${service}`)}
+                  <Link
+                    href="/#services"
                     className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
                   >
                     {service}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -141,27 +140,25 @@ export const Footer: React.FC = () => {
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
               <ul className="space-y-2.5">
                 {categoriesLeft.map((cat) => (
-                  <li key={cat}>
-                    <a
-                      href="#products"
-                      onClick={() => toast.info(`Viewing ${cat}`)}
+                  <li key={cat.slug}>
+                    <Link
+                      href={`/products?category=${cat.slug}`}
                       className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
                     >
-                      {cat}
-                    </a>
+                      {cat.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
               <ul className="space-y-2.5">
                 {categoriesRight.map((cat) => (
-                  <li key={cat}>
-                    <a
-                      href="#products"
-                      onClick={() => toast.info(`Viewing ${cat}`)}
+                  <li key={cat.slug}>
+                    <Link
+                      href={`/products?category=${cat.slug}`}
                       className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
                     >
-                      {cat}
-                    </a>
+                      {cat.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -185,10 +182,10 @@ export const Footer: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <Mail className="w-5 h-5 text-brand-red shrink-0" />
                 <a
-                  href="mailto:info@abcofoodsupply.com"
+                  href="mailto: abcofoodsupply@gmail.com"
                   className="hover:text-brand-red text-slate-600 text-sm sm:text-[15px] font-medium transition-colors break-all"
                 >
-                  info@abcofoodsupply.com
+                   abcofoodsupply@gmail.com
                 </a>
               </div>
             </div>
@@ -198,7 +195,16 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar: Copyright & Slogan */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs sm:text-sm">
           <p>© {new Date().getFullYear()} ABCO Food Supply. All rights reserved.</p>
-          <p className="font-semibold text-slate-600">Quality Food. Reliable Supply.</p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/login"
+              className="text-slate-400 hover:text-brand-red transition-colors font-medium flex items-center gap-1"
+            >
+              <span>AFS Admin Portal</span>
+            </Link>
+            <span className="text-slate-300">•</span>
+            <p className="font-semibold text-slate-600">Quality Food. Reliable Supply.</p>
+          </div>
         </div>
       </div>
     </footer>

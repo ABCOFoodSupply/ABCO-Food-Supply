@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Package,
   Truck,
@@ -47,38 +48,47 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
   const categories = [
     {
       name: "Rice & Grains",
+      slug: "rice-and-grains",
       image: "/categories/rice-and-grains.png",
     },
     {
       name: "Meat",
+      slug: "meat",
       image: "/categories/meat.png",
     },
     {
       name: "Seafood",
+      slug: "seafood",
       image: "/categories/seafood.png",
     },
     {
       name: "Poultry",
+      slug: "poultry",
       image: "/categories/poultry.png",
     },
     {
       name: "Dairy",
+      slug: "dairy",
       image: "/categories/dairy.png",
     },
     {
       name: "Edible Oils",
+      slug: "edible-oils",
       image: "/categories/edible-oils.png",
     },
     {
       name: "Food Ingredients",
+      slug: "food-ingredients",
       image: "/categories/food-ingredients.png",
     },
     {
       name: "Beverages",
+      slug: "beverages",
       image: "/categories/beverages.png",
     },
     {
       name: "Fruits & Vegetables",
+      slug: "fruits-and-vegetables",
       image: "/categories/fruits-and-vegetables.png",
     },
   ];
@@ -210,9 +220,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200/90 p-3 sm:p-5 overflow-hidden">
           <div className="flex lg:grid lg:grid-cols-9 gap-3 sm:gap-4 overflow-x-auto hide-scrollbar scroll-smooth">
             {categories.map((cat) => (
-              <div
+              <Link
                 key={cat.name}
-                onClick={() => handleCategoryClick(cat.name)}
+                href={`/products?category=${cat.slug}`}
                 className="flex-shrink-0 w-32 sm:w-36 lg:w-auto group flex flex-col items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-brand-red/40 hover:bg-red-50/20 hover:shadow-md transition-all duration-200 cursor-pointer text-center bg-white"
               >
                 {/* Large, clearly visible, unclipped food category image */}
@@ -230,7 +240,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
                 <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-brand-red transition-colors whitespace-nowrap leading-snug">
                   {cat.name}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

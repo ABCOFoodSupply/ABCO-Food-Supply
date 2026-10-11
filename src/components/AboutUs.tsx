@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Package, Globe, Truck, MapPin, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,13 +89,13 @@ export const AboutUs: React.FC<AboutUsProps> = ({ onLearnMore }) => {
 
             {/* Red pill button */}
             <div className="pt-2">
-              <button
-                onClick={handleLearnMore}
-                className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+              <Link
+                href="/about"
+                className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer inline-flex"
               >
                 <span>Learn More</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -107,7 +107,7 @@ export const ContactSection: React.FC = () => {
 
               {/* Email */}
               <div
-                onClick={() => handleCopy("info@abcofoodsupply.com", "Email Address")}
+                onClick={() => handleCopy(" abcofoodsupply@gmail.com", "Email Address")}
                 className="flex items-center gap-3 group cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-full bg-brand-red flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
@@ -116,7 +116,7 @@ export const ContactSection: React.FC = () => {
                 <div>
                   <p className="text-xs text-slate-400 font-medium">Email Inquiries</p>
                   <p className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-brand-red transition-colors break-all">
-                    info@abcofoodsupply.com
+                     abcofoodsupply@gmail.com
                   </p>
                 </div>
               </div>
