@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  LayoutTemplate,
   Package,
-  Layers,
   Inbox,
   Image as ImageIcon,
   Users,
@@ -69,8 +69,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems = [
     { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Products & SKUs", href: "/admin/products", icon: Package, badge: "524" },
-    { name: "Supply Categories", href: "/admin/categories", icon: Layers, badge: "12" },
+    { name: "Home Page CMS", href: "/admin/cms", icon: LayoutTemplate, badge: "Sections", badgeColor: "bg-brand-red text-white font-bold" },
+    { name: "Products & Categories", href: "/admin/products", icon: Package },
     { name: "Wholesale RFQs", href: "/admin/rfq", icon: Inbox, badge: "6", badgeColor: "bg-brand-red text-white font-bold" },
     { name: "ImageKit CDN Media", href: "/admin/media", icon: ImageIcon },
     { name: "Hypermarket Clients", href: "/admin/partners", icon: Users },

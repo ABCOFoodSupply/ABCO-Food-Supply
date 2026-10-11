@@ -29,7 +29,7 @@ export const ContactSection: React.FC = () => {
   const [mapZoom, setMapZoom] = useState(1);
   const [isMapCardVisible, setIsMapCardVisible] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.fullName.trim()) {
@@ -47,10 +47,29 @@ export const ContactSection: React.FC = () => {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const res = await fetch("/api/rfq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "contact_section_enquiry",
+          clientName: formData.fullName,
+          companyName: formData.companyName || "Independent Buyer",
+          email: formData.email,
+          phone: formData.phone,
+          category: formData.productInterest || "General Procurement Inquiry",
+          requestedVolume: "Direct Website Inquiry",
+          notes: formData.message,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok && !data.success) {
+        throw new Error(data.error || "Failed to transmit enquiry");
+      }
+
       toast.success("Enquiry Sent Successfully!", {
-        description: `Thank you ${formData.fullName}. Our Jubail commercial sales team will reach out at ${formData.email} within 24 hours.`,
+        description: `Thank you ${formData.fullName}. Reference #${data.data?.id || "AFS-RFQ"}. Our Jubail commercial sales team will reach out at ${formData.email} within 24 hours.`,
         duration: 5000,
       });
 
@@ -62,7 +81,12 @@ export const ContactSection: React.FC = () => {
         productInterest: "",
         message: "",
       });
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not send enquiry right now. Please try again or WhatsApp us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCopy = (text: string, label: string) => {

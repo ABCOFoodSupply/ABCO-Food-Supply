@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Vision2030Badge } from "./Vision2030Badge";
+import { getHomePageCmsData, fetchHomePageCmsFromDb, DEFAULT_HOMEPAGE_CMS, HomePageCmsData } from "@/lib/cmsData";
 
 interface HeroProps {
   onOpenEnquiry?: () => void;
@@ -21,6 +22,52 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) => {
+  const [cmsData, setCmsData] = React.useState<HomePageCmsData>(DEFAULT_HOMEPAGE_CMS);
+
+  React.useEffect(() => {
+    // 1. Initial cached load
+    const cached = getHomePageCmsData();
+    setCmsData(cached);
+
+    // 2. Background sync from Supabase DB for Hero & Partners
+    fetchHomePageCmsFromDb().then((dbData) => {
+      if (dbData) {
+        setCmsData((prev) => ({
+          ...prev,
+          hero: dbData.hero,
+          clientsPartners: dbData.clientsPartners,
+        }));
+      }
+    });
+
+    // 3. Sync real categories directly from unified DB /api/categories
+    fetch("/api/categories?homepage=true")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setCmsData((prev) => ({
+            ...prev,
+            quickCategories: json.data.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              slug: c.slug,
+              image: c.image,
+            })),
+          }));
+        }
+      })
+      .catch((err) => console.warn("Failed to load dynamic categories in Hero:", err));
+
+    // 4. Real-time event listener for instant updates
+    const handleCmsUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<HomePageCmsData>;
+      if (customEvent.detail) {
+        setCmsData(customEvent.detail);
+      }
+    };
+    window.addEventListener("afs_cms_updated", handleCmsUpdate);
+    return () => window.removeEventListener("afs_cms_updated", handleCmsUpdate);
+  }, []);
   const heroFeatures = [
     {
       title: "Wide Product",
@@ -119,7 +166,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
         {/* Desktop / Tablet Background Image */}
         <div className="hidden md:block absolute inset-0 z-0">
           <Image
-            src="/categories/hero.png"
+            src={cmsData.hero.heroImage || "/categories/hero.png"}
             alt="ABCO Food Supply Supermarket Distribution"
             fill
             priority
@@ -141,19 +188,19 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
           <div className="max-w-xl lg:max-w-2xl space-y-5 sm:space-y-6">
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.12]">
-              Your Trusted Partner for <br className="hidden sm:inline" />
-              Quality <span className="text-brand-red">Food Supply</span>
+              {cmsData.hero.titleLine1} <br className="hidden sm:inline" />
+              <span className="text-brand-red">{cmsData.hero.titleHighlight}</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-slate-600 font-normal leading-relaxed max-w-xl">
-              Distributor of Imported & Locally Manufactured Food Products Across the Kingdom of Saudi Arabia.
+              {cmsData.hero.subtitle}
             </p>
 
             {/* RESPONSIVE MOBILE IMAGE: Clearly visible on mobile & tablet */}
             <div className="block md:hidden relative w-full aspect-[16/10] sm:aspect-[2/1] rounded-2xl overflow-hidden shadow-md border border-slate-200/90 my-5 bg-slate-50">
               <Image
-                src="/categories/hero.png"
+                src={cmsData.hero.mobileHeroImage || cmsData.hero.heroImage || "/categories/hero.png"}
                 alt="ABCO Food Supply Supermarket Distribution Operations"
                 fill
                 priority
@@ -189,24 +236,45 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
 
             {/* Call To Actions */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2 pb-10 sm:pb-16 md:pb-20">
-              {/* Red Pill Button with Shopping Cart */}
-              <button
-                onClick={handleBuyProducts}
-                className="bg-brand-red hover:bg-brand-red-dark text-white px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span>Buy Any Products</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              {/* Button 1: Configured via CMS */}
+              {cmsData.hero.button1Link?.startsWith("/") ? (
+                <Link
+                  href={cmsData.hero.button1Link}
+                  className="bg-brand-red hover:bg-brand-red-dark text-white px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>{cmsData.hero.button1Text || "Buy Any Products"}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <button
+                  onClick={handleBuyProducts}
+                  className="bg-brand-red hover:bg-brand-red-dark text-white px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>{cmsData.hero.button1Text || "Buy Any Products"}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
 
-              {/* White Pill Button with Clipboard/Enquire */}
-              <button
-                onClick={onOpenEnquiry}
-                className="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-sm hover:border-slate-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <ClipboardList className="w-5 h-5 text-slate-700" />
-                <span>Enquire Now</span>
-              </button>
+              {/* Button 2: Configured via CMS */}
+              {cmsData.hero.button2Link?.startsWith("/") ? (
+                <Link
+                  href={cmsData.hero.button2Link}
+                  className="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-sm hover:border-slate-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ClipboardList className="w-5 h-5 text-slate-700" />
+                  <span>{cmsData.hero.button2Text || "Enquire Now"}</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={onOpenEnquiry}
+                  className="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-7 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-sm hover:border-slate-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ClipboardList className="w-5 h-5 text-slate-700" />
+                  <span>{cmsData.hero.button2Text || "Enquire Now"}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -215,15 +283,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenEnquiry, onSelectCategory }) =
         <div className="h-4 sm:h-8" />
       </div>
 
-      {/* HERO CATEGORIES SECTION (Smooth horizontal scroll on mobile, 9 columns on desktop) */}
+      {/* HERO CATEGORIES SECTION (Dynamic from DB) */}
       <div className="relative -mt-8 sm:-mt-12 md:-mt-16 z-20 w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28 pb-10">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200/90 p-3 sm:p-5 overflow-hidden">
-          <div className="flex lg:grid lg:grid-cols-9 gap-3 sm:gap-4 overflow-x-auto hide-scrollbar scroll-smooth">
-            {categories.map((cat) => (
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto hide-scrollbar scroll-smooth justify-start pb-1">
+            {cmsData.quickCategories.map((cat) => (
               <Link
-                key={cat.name}
+                key={cat.id || cat.slug}
                 href={`/products?category=${cat.slug}`}
-                className="flex-shrink-0 w-32 sm:w-36 lg:w-auto group flex flex-col items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-brand-red/40 hover:bg-red-50/20 hover:shadow-md transition-all duration-200 cursor-pointer text-center bg-white"
+                className="flex-shrink-0 w-32 sm:w-36 lg:w-32 xl:w-36 group flex flex-col items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-brand-red/40 hover:bg-red-50/20 hover:shadow-md transition-all duration-200 cursor-pointer text-center bg-white"
               >
                 {/* Large, clearly visible, unclipped food category image */}
                 <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-24 lg:h-24 xl:w-28 xl:h-28 mb-2.5 flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50/90 border border-slate-200/80 p-2 shadow-2xs group-hover:scale-105 transition-all duration-300">

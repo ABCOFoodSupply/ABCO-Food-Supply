@@ -4,47 +4,33 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { getHomePageCmsData, fetchHomePageCmsFromDb, DEFAULT_HOMEPAGE_CMS, HomePageCmsData } from "@/lib/cmsData";
 
 export const Partners: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [partners, setPartners] = useState(DEFAULT_HOMEPAGE_CMS.clientsPartners);
 
-  // Official client & partner logos from categories folder
-  const partners = [
-    {
-      name: "Partner Brand 1",
-      image: "/categories/partner-1.png",
-    },
-    {
-      name: "Partner Brand 2",
-      image: "/categories/partner-2.png",
-    },
-    {
-      name: "Partner Brand 3",
-      image: "/categories/partner-3.png",
-    },
-    {
-      name: "Partner Brand 4",
-      image: "/categories/partner-4.png",
-    },
-    {
-      name: "Partner Brand 5",
-      image: "/categories/partner-5.png",
-    },
-    {
-      name: "Carrefour KSA",
-      image: "/categories/partner-1.png",
-    },
-    {
-      name: "LuLu Hypermarket",
-      image: "/categories/partner-2.png",
-    },
-    {
-      name: "Panda Retail",
-      image: "/categories/partner-3.png",
-    },
-  ];
+  useEffect(() => {
+    const data = getHomePageCmsData();
+    if (data.clientsPartners?.length) {
+      setPartners(data.clientsPartners);
+    }
+    fetchHomePageCmsFromDb().then((dbData) => {
+      if (dbData?.clientsPartners?.length) {
+        setPartners(dbData.clientsPartners);
+      }
+    });
+    const handleCmsUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<HomePageCmsData>;
+      if (customEvent.detail?.clientsPartners?.length) {
+        setPartners(customEvent.detail.clientsPartners);
+      }
+    };
+    window.addEventListener("afs_cms_updated", handleCmsUpdate);
+    return () => window.removeEventListener("afs_cms_updated", handleCmsUpdate);
+  }, []);
 
   const [cardsPerView, setCardsPerView] = useState(4);
 

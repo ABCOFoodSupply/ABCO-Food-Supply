@@ -96,15 +96,41 @@ export default function ContactPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.company.trim()) {
+      toast.error("Please fill in all required fields (*).");
+      return;
+    }
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const ticketId = Math.floor(100000 + Math.random() * 900000);
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/rfq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "contact_page_formal_rfq",
+          clientName: formData.name,
+          companyName: formData.company,
+          crNumber: formData.crNumber,
+          email: formData.email,
+          phone: formData.phone,
+          city: formData.city,
+          businessType: formData.businessType,
+          category: selectedCategories.join(", "),
+          requestedVolume: formData.volume,
+          notes: formData.message,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok && !data.success) {
+        throw new Error(data.error || "Failed to submit RFQ");
+      }
+
       toast.success("Inquiry & RFQ Transmitted Successfully!", {
-        description: `Reference #AFS-RFQ-${ticketId}. Our Jubail commercial sales desk will contact you within 2 hours.`,
+        description: `Reference #${data.data?.id || "AFS-RFQ"}. Our Jubail commercial sales desk will contact you within 2 hours.`,
+        duration: 5000,
       });
 
       setFormData({
@@ -114,12 +140,17 @@ export default function ContactPage() {
         company: "",
         crNumber: "",
         businessType: "HORECA & Hospitality",
-        city: "Jubail",
+        city: "Jubail Industrial City",
         volume: "Weekly Pallet Delivery",
         message: "",
       });
       setSelectedCategories(["Rice & Grains"]);
-    }, 800);
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to transmit quotation request. Please try again or reach us on WhatsApp.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

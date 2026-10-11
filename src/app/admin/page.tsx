@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Package, 
@@ -17,34 +17,103 @@ import {
   Database, 
   CloudLightning, 
   Sparkles,
-  Phone
+  Phone,
+  Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 import { MOCK_ADMIN_RFQS, MOCK_ADMIN_STATS, AdminRfqItem } from "@/data/adminMock";
 import { CATEGORIES } from "@/data/products";
 
 export default function AdminDashboardPage() {
-  const [rfqList, setRfqList] = useState<AdminRfqItem[]>(MOCK_ADMIN_RFQS);
+  const [rfqList, setRfqList] = useState<AdminRfqItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRfq, setSelectedRfq] = useState<AdminRfqItem | null>(null);
+  const [productCount, setProductCount] = useState<number>(0);
+  const [categoryCount, setCategoryCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      setIsLoading(true);
+      try {
+        const [rfqRes, prodRes, catRes] = await Promise.all([
+          fetch("/api/rfq", { cache: "no-store" }),
+          fetch("/api/products", { cache: "no-store" }),
+          fetch("/api/categories", { cache: "no-store" }),
+        ]);
+
+        if (rfqRes.ok) {
+          const rfqJson = await rfqRes.json();
+          if (rfqJson.success && Array.isArray(rfqJson.data)) {
+            const mapped: AdminRfqItem[] = rfqJson.data.map((r: any) => ({
+              id: r.id,
+              clientName: r.client_name || r.clientName || "Customer",
+              companyName: r.company_name || r.companyName || "Company",
+              crNumber: r.cr_number || r.crNumber || "",
+              phone: r.phone || "",
+              email: r.email || "",
+              city: r.city || "Jubail Industrial City",
+              category: r.category || "Rice & Grains",
+              productName: r.product_name || r.productName || "",
+              requestedVolume: r.requested_volume || r.requestedVolume || "Standard",
+              status: r.status || "Pending",
+              date: r.created_at ? new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent",
+              notes: r.notes || "",
+            }));
+            setRfqList(mapped);
+          }
+        }
+
+        if (prodRes.ok) {
+          const prodJson = await prodRes.json();
+          setProductCount(prodJson.data?.length || 0);
+        }
+
+        if (catRes.ok) {
+          const catJson = await catRes.json();
+          setCategoryCount(catJson.data?.length || 0);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
 
   // Filter RFQs based on status & search
   const filteredRfqs = rfqList.filter((item) => {
     const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return matchesStatus;
     const matchesSearch =
-      item.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.companyName && item.companyName.toLowerCase().includes(q)) ||
+      (item.clientName && item.clientName.toLowerCase().includes(q)) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
+      (item.productName && item.productName.toLowerCase().includes(q)) ||
+      (item.id && item.id.toLowerCase().includes(q));
     return matchesStatus && matchesSearch;
   });
 
-  const handleUpdateStatus = (id: string, newStatus: AdminRfqItem["status"]) => {
+  const handleUpdateStatus = async (id: string, newStatus: AdminRfqItem["status"]) => {
     setRfqList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
     );
     if (selectedRfq && selectedRfq.id === id) {
       setSelectedRfq({ ...selectedRfq, status: newStatus });
+    }
+    try {
+      await fetch("/api/rfq", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      toast.success(`Inquiry status updated to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -113,10 +182,12 @@ export default function AdminDashboardPage() {
               <Package className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900">{MOCK_ADMIN_STATS.totalSkus}</div>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900">
+            {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-brand-red inline-block" /> : productCount}
+          </div>
           <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 mt-2 font-bold">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span>+18 SKUs added this quarter</span>
+            <span>Across {categoryCount} Wholesale Categories</span>
           </div>
         </div>
 
@@ -127,10 +198,12 @@ export default function AdminDashboardPage() {
               <Inbox className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900">{MOCK_ADMIN_STATS.pendingReview}</div>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900">
+            {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-amber-600 inline-block" /> : rfqList.filter(r => r.status === "Pending").length}
+          </div>
           <div className="flex items-center gap-1.5 text-[11px] text-amber-700 mt-2 font-bold">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
-            <span>Requires response within 2 hrs</span>
+            <span>{rfqList.length} Total Client Enquiries</span>
           </div>
         </div>
 

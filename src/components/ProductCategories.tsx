@@ -113,10 +113,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
     },
   ];
 
-  const handleCardClick = (product: (typeof products)[0]) => {
+  const [categoriesList, setCategoriesList] = useState(products);
+
+  React.useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setCategoriesList(
+            json.data.map((c: any) => ({
+              id: c.id,
+              slug: c.slug,
+              title: c.name,
+              image: c.image || "/categories/rice-and-grains.png",
+              description: c.description || "",
+              itemsCount: "Available",
+            }))
+          );
+        }
+      })
+      .catch((err) => console.warn("Failed to load categories dynamically:", err));
+  }, []);
+
+  const handleCardClick = (product: { title: string; itemsCount: string }) => {
     setSelectedCat(product.title);
     toast.success(`Category Selected: ${product.title}`, {
-      description: `${product.itemsCount} available. Click "Enquiry Now" to request pricing specifications.`,
+      description: `Click "Enquiry Now" to request pricing specifications.`,
     });
     if (onSelectCategory) {
       onSelectCategory(product.title);
@@ -152,9 +174,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
           </Link>
         </div>
 
-        {/* 12 Product Cards Grid - Uncut, clean, fully visible food images */}
+        {/* Product Cards Grid - Uncut, clean, fully visible food images */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
-          {products.map((product) => {
+          {categoriesList.map((product) => {
             const isSelected = selectedCat === product.title;
             return (
               <Link

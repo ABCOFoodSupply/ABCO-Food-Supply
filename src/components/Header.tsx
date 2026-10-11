@@ -11,6 +11,7 @@ import {
   Sparkles,
   Phone,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
 
@@ -19,6 +20,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,14 +36,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-    toast.info(`Searching for "${searchQuery}"`, {
-      description: "Found matching food products across our catalog.",
-    });
+    const query = searchQuery.trim();
+    if (!query) return;
     setSearchOpen(false);
-    // Smooth scroll to products
-    const el = document.getElementById("products");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    setSearchQuery("");
+    router.push(`/products?search=${encodeURIComponent(query)}`);
   };
 
   const navLinks = [
