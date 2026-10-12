@@ -13,8 +13,8 @@ export interface HeroCmsData {
   titleLine1: string;
   titleHighlight: string;
   subtitle: string;
-  heroImage: string; // Single responsive image used for both desktop & mobile
-  mobileHeroImage?: string;
+  heroImage: string; // Desktop & tablet image
+  mobileHeroImage?: string; // Phones; empty = use heroImage
   button1Text: string;
   button1Link: string;
   button2Text: string;
@@ -51,7 +51,7 @@ export const DEFAULT_HOMEPAGE_CMS: HomePageCmsData = {
     titleHighlight: "Food Supply",
     subtitle: "Distributor of Imported & Locally Manufactured Food Products Across the Kingdom of Saudi Arabia.",
     heroImage: "/categories/hero.png",
-    mobileHeroImage: "/categories/hero.png",
+    mobileHeroImage: "",
     button1Text: "Buy Any Products",
     button1Link: "/products",
     button2Text: "Enquire Now",
@@ -230,6 +230,14 @@ export async function saveHomePageCmsData(data: HomePageCmsData): Promise<boolea
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    if (res.ok) {
+      const json = await res.json().catch(() => null);
+      if (json?.warning && typeof window !== "undefined") {
+        // loaded lazily: this module is also imported by the server-side /api/cms route
+        const { toast } = await import("sonner");
+        toast.warning(json.warning, { duration: 10000 });
+      }
+    }
     return res.ok;
   } catch (err) {
     console.error("Failed to persist CMS to Supabase DB:", err);

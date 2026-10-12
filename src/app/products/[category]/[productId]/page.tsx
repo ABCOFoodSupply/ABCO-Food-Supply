@@ -13,16 +13,19 @@ import {
   Sparkles,
   Award,
   Send,
-  MessageCircle,
   Share2,
   Check,
   Scale,
   Loader2,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { useSection } from "@/components/SiteSectionsProvider";
+import { phoneDigits } from "@/lib/siteSections";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { EnquiryModal } from "@/components/EnquiryModal";
+import { ProductCard } from "@/components/ProductCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Product {
@@ -47,11 +50,14 @@ export default function ProductDetailPage() {
   const categorySlug = params.category as string;
   const productId = params.productId as string;
 
+  const contact = useSection("contact");
+  const waNumber = phoneDigits(contact.whatsapp || contact.phone);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
+  const [enquirySubject, setEnquirySubject] = useState("");
 
   // RFQ Form state
   const [rfqName, setRfqName] = useState("");
@@ -198,7 +204,12 @@ export default function ProductDetailPage() {
   // ────────────────────────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-slate-50/70 flex flex-col">
-      <Header onOpenEnquiry={() => setIsEnquiryModalOpen(true)} />
+      <Header
+        onOpenEnquiry={() => {
+          setEnquirySubject("");
+          setIsEnquiryModalOpen(true);
+        }}
+      />
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-200/80 py-3.5 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28 text-xs sm:text-sm text-slate-500">
@@ -214,7 +225,7 @@ export default function ProductDetailPage() {
             {product.category_name}
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-900 font-bold truncate max-w-[200px] sm:max-w-none">
+          <span className="text-slate-900 font-bold">
             {product.name}
           </span>
         </div>
@@ -293,7 +304,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Packaging</span>
-                  <p className="text-sm font-black text-slate-900 mt-0.5 truncate">{product.packaging}</p>
+                  <p className="text-sm font-black text-slate-900 mt-0.5 break-words">{product.packaging}</p>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Shelf Life</span>
@@ -301,7 +312,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Storage</span>
-                  <p className="text-sm font-black text-brand-red mt-0.5 truncate">{product.storage_type}</p>
+                  <p className="text-sm font-black text-brand-red mt-0.5 break-words">{product.storage_type}</p>
                 </div>
               </div>
 
@@ -318,12 +329,12 @@ export default function ProductDetailPage() {
                   <span>Request Wholesale Pricing</span>
                 </button>
                 <a
-                  href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to request wholesale pricing for ${product.name} (${product.category_name}).`)}`}
+                  href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to request wholesale pricing for ${product.name} (${product.category_name}).`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="bg-[#25D366] hover:bg-[#20ba59] text-white px-7 py-3.5 rounded-full text-base font-bold shadow-md transition-all flex items-center gap-2"
                 >
-                  <MessageCircle className="w-4 h-4 fill-current" />
+                  <WhatsAppIcon className="w-4 h-4" />
                   <span>WhatsApp Inquiry</span>
                 </a>
               </div>
@@ -463,7 +474,7 @@ export default function ProductDetailPage() {
                     required
                     value={rfqPhone}
                     onChange={(e) => setRfqPhone(e.target.value)}
-                    placeholder="+966 57 299 5987"
+                    placeholder="+966 5X XXX XXXX"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:border-brand-red outline-none"
                   />
                 </div>
@@ -494,20 +505,22 @@ export default function ProductDetailPage() {
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmittingRfq}
-                className="w-full bg-brand-red hover:bg-red-700 text-white py-4 rounded-full text-base font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-              >
-                {isSubmittingRfq ? (
-                  <span>Submitting...</span>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    <span>Request Quotation for {product.name}</span>
-                  </>
-                )}
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={isSubmittingRfq}
+                  className="w-full sm:w-auto sm:min-w-[260px] bg-brand-red hover:bg-red-700 text-white px-10 py-3.5 rounded-full text-base font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                >
+                  {isSubmittingRfq ? (
+                    <span>Submitting...</span>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Request Quotation</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -533,37 +546,14 @@ export default function ProductDetailPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((rel) => (
-                <Link
+                <ProductCard
                   key={rel.id}
-                  href={`/products/${rel.category_slug}/${rel.id}`}
-                  className="bg-white rounded-3xl border border-slate-200 hover:border-brand-red/40 hover:shadow-lg transition-all p-5 flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="relative aspect-[16/10] bg-slate-50 rounded-2xl overflow-hidden p-2 flex items-center justify-center">
-                      {rel.image ? (
-                        <Image
-                          src={rel.image}
-                          alt={rel.name}
-                          fill
-                          className="object-contain p-2 group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <Package className="w-12 h-12 text-slate-300" />
-                      )}
-                    </div>
-                    <h4 className="text-base font-bold text-slate-900 group-hover:text-brand-red transition-colors line-clamp-1">
-                      {rel.name}
-                    </h4>
-                    <p className="text-xs text-slate-500 line-clamp-2">{rel.description}</p>
-                  </div>
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 mt-3 font-medium">
-                    <span>MOQ: {rel.moq}</span>
-                    <span className="text-brand-red font-bold flex items-center gap-1">
-                      View Specs
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </Link>
+                  product={rel}
+                  onEnquire={() => {
+                    setEnquirySubject(`${rel.name} (${rel.category_name})`);
+                    setIsEnquiryModalOpen(true);
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -575,7 +565,7 @@ export default function ProductDetailPage() {
       <EnquiryModal
         isOpen={isEnquiryModalOpen}
         onClose={() => setIsEnquiryModalOpen(false)}
-        preselectedCategory={product ? `${product.name} (${product.category_name})` : ""}
+        preselectedCategory={enquirySubject || `${product.name} (${product.category_name})`}
       />
     </main>
   );

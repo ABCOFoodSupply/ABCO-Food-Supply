@@ -50,6 +50,7 @@ export default function Home() {
         onSelectCategory={(category) => {
           setSelectedCategory(category);
         }}
+        onEnquireProduct={(subject) => handleOpenEnquiry(subject)}
       />
 
       {/* B2B Promotional Banner */}

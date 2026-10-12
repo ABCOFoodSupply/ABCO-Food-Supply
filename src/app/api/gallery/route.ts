@@ -19,6 +19,7 @@ const DEFAULT_GALLERY = [
     caption: "Our central Jubail warehousing complex featuring multi-temperature loading docks and dedicated refrigerated delivery fleet staging area.",
     location: "Jubail Industrial City, KSA",
     sort_order: 1,
+    show_on_homepage: true,
   },
   {
     id: "gal-2",
@@ -29,6 +30,7 @@ const DEFAULT_GALLERY = [
     caption: "Direct supply and shelf fulfillment of dry goods, edible oils, grains, and beverages to premier hypermarkets across the Kingdom.",
     location: "Eastern Province & Riyadh",
     sort_order: 2,
+    show_on_homepage: true,
   },
   {
     id: "gal-3",
@@ -39,6 +41,7 @@ const DEFAULT_GALLERY = [
     caption: "In-house temperature validation, barcode tracing, and SFDA batch clearance protocol verification for institutional food safety.",
     location: "AFS Central Depot, Jubail",
     sort_order: 3,
+    show_on_homepage: true,
   },
   {
     id: "gal-4",
@@ -49,8 +52,31 @@ const DEFAULT_GALLERY = [
     caption: "State-of-the-art GPS temperature-tracked reefer trucks maintaining unbroken -18°C and +4°C cold chain across all regional highway arteries.",
     location: "Kingdom-Wide Distribution",
     sort_order: 4,
+    show_on_homepage: true,
   },
 ];
+
+/**
+ * While the gallery_items table is empty, the site shows DEFAULT_GALLERY. Before the first
+ * admin write, save those defaults to the table so edits/deletes stick and adding one new
+ * image doesn't make the other defaults disappear.
+ */
+async function ensureSeeded() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/gallery_items?select=id&limit=1`, {
+    headers: headers(),
+    cache: "no-store",
+  });
+  if (!res.ok) return;
+  const rows = await res.json();
+  if (Array.isArray(rows) && rows.length > 0) return;
+
+  const now = new Date().toISOString();
+  await fetch(`${SUPABASE_URL}/rest/v1/gallery_items`, {
+    method: "POST",
+    headers: { ...headers(), Prefer: "resolution=ignore-duplicates" },
+    body: JSON.stringify(DEFAULT_GALLERY.map((g) => ({ ...g, created_at: now }))),
+  });
+}
 
 /**
  * GET /api/gallery - Fetch gallery images
@@ -59,6 +85,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
+    const homepageOnly = searchParams.get("homepage") === "true";
 
     let url = `${SUPABASE_URL}/rest/v1/gallery_items?select=*&order=sort_order.asc`;
     if (category && category !== "all") {
@@ -69,7 +96,9 @@ export async function GET(req: NextRequest) {
     if (res.ok) {
       const rows = await res.json();
       if (Array.isArray(rows) && rows.length > 0) {
-        return NextResponse.json({ success: true, data: rows });
+        // Filter here (not in SQL) so a saved gallery where nothing is picked returns [] instead of the defaults
+        const data = homepageOnly ? rows.filter((r: { show_on_homepage?: boolean }) => r.show_on_homepage !== false) : rows;
+        return NextResponse.json({ success: true, data });
       }
     }
 
@@ -90,6 +119,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    await ensureSeeded();
 
     const payload = {
       id: body.id || `gal-${Date.now()}`,
@@ -100,6 +130,7 @@ export async function POST(req: NextRequest) {
       caption: body.caption || "",
       location: body.location || "Jubail Industrial City, KSA",
       sort_order: body.sort_order || body.sortOrder || 99,
+      show_on_homepage: body.show_on_homepage ?? true,
       created_at: new Date().toISOString(),
     };
 
@@ -122,6 +153,38 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * PATCH /api/gallery - Update fields of an existing gallery photo ({ id, ...fields })
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    if (!body.id) return NextResponse.json({ success: false, error: "Missing id" }, { status: 400 });
+    await ensureSeeded();
+
+    const updates: Record<string, unknown> = {};
+    for (const key of ["title", "image", "caption", "location", "category", "category_label", "sort_order", "show_on_homepage"]) {
+      if (body[key] !== undefined) updates[key] = body[key];
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/gallery_items?id=eq.${encodeURIComponent(body.id)}`, {
+      method: "PATCH",
+      headers: { ...headers(), Prefer: "return=representation" },
+      body: JSON.stringify(updates),
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error("[gallery PATCH]", err);
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  }
+}
+
+/**
  * DELETE /api/gallery?id=xxx
  */
 export async function DELETE(req: NextRequest) {
@@ -129,6 +192,7 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    await ensureSeeded();
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/gallery_items?id=eq.${id}`, {
       method: "DELETE",

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { SiteSectionsProvider } from "@/components/SiteSectionsProvider";
+import { getStoredSiteSections } from "@/lib/siteSectionsServer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,17 +30,24 @@ export const metadata: Metadata = {
     "HORECA food supply",
   ],
   authors: [{ name: "ABCO Food Supply" }],
+  icons: {
+    icon: "/categories/favicon.png",
+    shortcut: "/categories/favicon.png",
+    apple: "/categories/favicon.png",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const storedSections = await getStoredSiteSections();
+
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} font-sans antialiased bg-white text-slate-800`}>
-        {children}
+        <SiteSectionsProvider initial={storedSections}>{children}</SiteSectionsProvider>
         <Toaster position="top-right" richColors closeButton expand={false} />
       </body>
     </html>

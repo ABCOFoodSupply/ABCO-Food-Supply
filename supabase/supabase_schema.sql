@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.homepage_hero (
     title_highlight TEXT NOT NULL DEFAULT 'Food Supply',
     subtitle TEXT NOT NULL DEFAULT 'Distributor of Imported & Locally Manufactured Food Products Across the Kingdom of Saudi Arabia.',
     hero_image TEXT NOT NULL DEFAULT '/categories/hero.png',
+    mobile_hero_image TEXT,
     button1_text TEXT NOT NULL DEFAULT 'Buy Any Products',
     button1_link TEXT NOT NULL DEFAULT '/products',
     button2_text TEXT NOT NULL DEFAULT 'Enquire Now',
@@ -96,6 +97,9 @@ CREATE TABLE IF NOT EXISTS public.clients_partners (
 -- ==============================================================================
 ALTER TABLE public.product_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+-- Existing databases: add the mobile hero image column
+ALTER TABLE public.homepage_hero ADD COLUMN IF NOT EXISTS mobile_hero_image TEXT;
+
 ALTER TABLE public.homepage_hero ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clients_partners ENABLE ROW LEVEL SECURITY;
 
@@ -239,4 +243,23 @@ VALUES (
     '45 GPS Temperature-Monitored Reefer Units'
 ) ON CONFLICT (id) DO NOTHING;
 
+-- ==============================================================================
+-- TABLE: site_sections
+-- Admin-editable homepage section content (one JSON document per section id)
+-- Reads are public; writes go through the server with the service role key.
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.site_sections (
+    id TEXT PRIMARY KEY,
+    data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE public.site_sections ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'site_sections' AND policyname = 'Allow public read site_sections') THEN
+        CREATE POLICY "Allow public read site_sections" ON public.site_sections FOR SELECT USING (true);
+    END IF;
+END $$;
 
+-- Gallery photos picked for the homepage gallery section
+ALTER TABLE public.gallery_items ADD COLUMN IF NOT EXISTS show_on_homepage BOOLEAN NOT NULL DEFAULT true;

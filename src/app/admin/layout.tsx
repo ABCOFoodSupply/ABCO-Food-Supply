@@ -20,7 +20,10 @@ import {
   CheckCircle,
   Database,
   CloudLightning,
-  ChevronRight
+  ChevronRight,
+  Info,
+  Briefcase,
+  Contact
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
@@ -73,10 +76,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navItems = [
     { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Home Page CMS", href: "/admin/cms", icon: LayoutTemplate, badge: "Sections", badgeColor: "bg-brand-red text-white font-bold" },
+    { name: "About Page", href: "/admin/about-page", icon: Info },
+    { name: "Services Page", href: "/admin/services-page", icon: Briefcase },
+    { name: "Contact & Social", href: "/admin/contact-settings", icon: Contact },
     { name: "Products & Categories", href: "/admin/products", icon: Package },
     { name: "Wholesale RFQs", href: "/admin/rfq", icon: Inbox, badgeColor: "bg-brand-red text-white font-bold" },
     { name: "Gallery", href: "/admin/media", icon: ImageIcon },
-    { name: "Clients", href: "/admin/partners", icon: Users },
+    { name: "Clients & Partners", href: "/admin/partners", icon: Users },
     { name: "Admin Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -92,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar - Clean White Background */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-slate-200/90 flex flex-col transition-transform duration-300 ease-in-out shadow-xs ${
+        className={`fixed lg:sticky top-0 bottom-0 lg:bottom-auto left-0 z-50 w-72 lg:h-screen shrink-0 bg-white border-r border-slate-200/90 flex flex-col transition-transform duration-300 ease-in-out shadow-xs ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >

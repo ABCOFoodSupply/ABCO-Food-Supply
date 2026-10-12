@@ -2,22 +2,33 @@
 
 import React from "react";
 import Link from "next/link";
-import {
-  MapPin,
-  Phone,
-  Mail,
-  Globe,
-  MessageCircle,
-} from "lucide-react";
-import { toast } from "sonner";
+import { MapPin, Phone, Mail, ChevronRight } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { Logo } from "./Logo";
+import { useSection } from "./SiteSectionsProvider";
+import { SocialButtons } from "./SocialLinks";
+import { phoneDigits } from "@/lib/siteSections";
+
+const Heading = ({ children }: { children: React.ReactNode }) => (
+  <h4 className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-slate-900 mb-5">
+    {children}
+    <span className="block w-8 h-0.5 bg-brand-red rounded-full mt-2.5" />
+  </h4>
+);
+
+const LinkArrow = () => (
+  <ChevronRight className="w-3.5 h-3.5 -ml-1 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-brand-red" />
+);
 
 export const Footer: React.FC = () => {
+  const contact = useSection("contact");
+  const footer = useSection("footer");
+
   const quickLinks = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
     { name: "Products", href: "/products" },
-    { name: "Services", href: "/#services" },
+    { name: "Services", href: "/services" },
     { name: "Gallery", href: "/gallery" },
     { name: "Contact", href: "/contact" },
   ];
@@ -31,16 +42,13 @@ export const Footer: React.FC = () => {
     "Supply Chain Solutions",
   ];
 
-  const categoriesLeft = [
+  const categories = [
     { name: "Rice & Grains", slug: "rice-and-grains" },
     { name: "Meat", slug: "meat" },
     { name: "Seafood", slug: "seafood" },
     { name: "Poultry", slug: "poultry" },
     { name: "Dairy Products", slug: "dairy" },
     { name: "Edible Oils", slug: "edible-oils" },
-  ];
-
-  const categoriesRight = [
     { name: "Food Ingredients", slug: "food-ingredients" },
     { name: "Beverages", slug: "beverages" },
     { name: "Fruits & Vegetables", slug: "fruits-and-vegetables" },
@@ -49,63 +57,74 @@ export const Footer: React.FC = () => {
     { name: "Bakery & Confectionery", slug: "bakery-confectionery" },
   ];
 
+  const contacts = [
+    { icon: MapPin, label: contact.address, href: undefined },
+    { icon: Phone, label: contact.phone, href: `tel:+${phoneDigits(contact.phone)}` },
+    { icon: Mail, label: contact.email, href: `mailto:${contact.email}` },
+  ];
+
+  const socialClass =
+    "w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm transition-all hover:-translate-y-0.5 hover:text-white cursor-pointer";
+
+  const linkClass =
+    "group inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-brand-red font-medium transition-colors";
+
   return (
-    <footer className="bg-white border-t border-slate-200/80 pt-14 pb-8 text-slate-600 text-sm sm:text-base">
-      <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-slate-200/80">
-          {/* Col 1: Brand & Bio (3 cols) */}
-          <div className="lg:col-span-3 space-y-4">
-            <Logo variant="full" />
-            <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
-              Distributor of imported & locally manufactured food products across the Kingdom of Saudi Arabia.
-            </p>
+    <footer className="relative bg-slate-50 border-t border-slate-200/80 text-slate-600">
+      {/* Brand accent line */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-red via-red-400 to-brand-green" />
 
-            {/* Social Icons */}
-            <div className="flex items-center gap-3 pt-2">
-              <a
-                href="https://wa.me/966572995987"
-                target="_blank"
-                rel="noreferrer"
-                className="w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5 fill-current" />
-              </a>
+      <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28 pt-14 sm:pt-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.5fr_0.8fr_1fr_1.7fr] gap-x-8 xl:gap-x-12 gap-y-10 pb-12 border-b border-slate-200">
+          {/* Brand + Contact */}
+          <div className="col-span-2 lg:col-span-4 xl:col-span-1 space-y-5 lg:grid lg:grid-cols-2 lg:gap-10 lg:space-y-0 xl:block xl:space-y-5">
+            <div className="space-y-4">
+              <Logo />
+              <p className="text-sm sm:text-[15px] leading-relaxed text-slate-600 max-w-sm">
+                {footer.bio}
+              </p>
 
-              <button
-                onClick={() => toast.info("Opening Facebook")}
-                className="w-10 h-10 rounded-full bg-[#1877f2] hover:bg-[#166fe5] text-white flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
-                aria-label="Facebook"
-              >
-                <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => toast.info("Opening Instagram")}
-                className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
-                aria-label="Instagram"
-              >
-                <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.13-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                </svg>
-              </button>
+              {/* Social Icons (Admin → Contact & Social) */}
+              <div className="pt-1">
+                <SocialButtons />
+              </div>
             </div>
+            {/* Contact */}
+            <ul className="space-y-3 lg:pt-2 xl:pt-1">
+              {contacts.map(({ icon: Icon, label, href }) => {
+                const content = (
+                  <>
+                    <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-brand-red flex items-center justify-center shrink-0 shadow-sm group-hover:bg-brand-red group-hover:text-white group-hover:border-brand-red transition-colors">
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-brand-red transition-colors [overflow-wrap:anywhere]">
+                      {label}
+                    </span>
+                  </>
+                );
+                return (
+                  <li key={label}>
+                    {href ? (
+                      <a href={href} className="group flex items-center gap-3">
+                        {content}
+                      </a>
+                    ) : (
+                      <div className="group flex items-center gap-3">{content}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
-          {/* Col 2: Quick Links (2 cols) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900">
-              Quick Links
-            </h4>
-            <ul className="space-y-2.5">
+          {/* Quick Links */}
+          <div>
+            <Heading>Quick Links</Heading>
+            <ul className="space-y-3">
               {quickLinks.map((item) => (
                 <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
-                  >
+                  <Link href={item.href} className={linkClass}>
+                    <LinkArrow />
                     {item.name}
                   </Link>
                 </li>
@@ -113,18 +132,14 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 3: Our Services (2 cols) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900">
-              Our Services
-            </h4>
-            <ul className="space-y-2.5">
+          {/* Our Services */}
+          <div>
+            <Heading>Our Services</Heading>
+            <ul className="space-y-3">
               {ourServices.map((service) => (
                 <li key={service}>
-                  <Link
-                    href="/#services"
-                    className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
-                  >
+                  <Link href="/services" className={linkClass}>
+                    <LinkArrow />
                     {service}
                   </Link>
                 </li>
@@ -132,78 +147,33 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 4: Product Categories (3 cols) */}
-          <div className="lg:col-span-3 space-y-4">
-            <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900">
-              Product Categories
-            </h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-              <ul className="space-y-2.5">
-                {categoriesLeft.map((cat) => (
-                  <li key={cat.slug}>
-                    <Link
-                      href={`/products?category=${cat.slug}`}
-                      className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
-                    >
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <ul className="space-y-2.5">
-                {categoriesRight.map((cat) => (
-                  <li key={cat.slug}>
-                    <Link
-                      href={`/products?category=${cat.slug}`}
-                      className="hover:text-brand-red transition-colors inline-block text-slate-600 hover:translate-x-1 transform duration-150 text-sm sm:text-[15px] font-medium"
-                    >
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Col 5: Contact Us (2 cols) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900">
-              Contact Us
-            </h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
-                <span className="text-slate-600 text-sm sm:text-[15px] font-medium leading-snug">Jubail, Kingdom of Saudi Arabia</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-5 h-5 text-brand-red shrink-0" />
-                <span className="text-slate-600 text-sm sm:text-[15px] font-medium">+966 57 299 5987</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-5 h-5 text-brand-red shrink-0" />
-                <a
-                  href="mailto: abcofoodsupply@gmail.com"
-                  className="hover:text-brand-red text-slate-600 text-sm sm:text-[15px] font-medium transition-colors break-all"
-                >
-                   abcofoodsupply@gmail.com
-                </a>
-              </div>
-            </div>
+          {/* Product Categories */}
+          <div className="col-span-2 xl:col-span-1">
+            <Heading>Product Categories</Heading>
+            <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-x-4 gap-y-3">
+              {categories.map((cat) => (
+                <li key={cat.slug}>
+                  <Link href={`/products?category=${cat.slug}`} className={linkClass}>
+                    <LinkArrow />
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Slogan */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs sm:text-sm">
+        {/* Bottom Bar */}
+        <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-slate-500">
           <p>© {new Date().getFullYear()} ABCO Food Supply. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link
-              href="/admin/login"
-              className="text-slate-400 hover:text-brand-red transition-colors font-medium flex items-center gap-1"
-            >
-              <span>AFS Admin Portal</span>
+            <Link href="/admin/login" className="text-slate-400 hover:text-brand-red transition-colors font-medium">
+              AFS Admin Portal
             </Link>
-            <span className="text-slate-300">•</span>
-            <p className="font-semibold text-slate-600">Quality Food. Reliable Supply.</p>
+            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <p className="font-bold text-slate-700">
+              {footer.tagline} <span className="text-brand-red">{footer.taglineHighlight}</span>
+            </p>
           </div>
         </div>
       </div>

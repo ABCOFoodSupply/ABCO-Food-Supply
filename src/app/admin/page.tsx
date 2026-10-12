@@ -10,16 +10,15 @@ import {
   Plus, 
   CheckCircle2, 
   Clock, 
-  MessageSquare, 
   ChevronRight, 
   Search, 
   Eye, 
-  Database, 
   CloudLightning, 
   Sparkles,
   Phone,
   Loader2
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { toast } from "sonner";
 import { MOCK_ADMIN_RFQS, MOCK_ADMIN_STATS, AdminRfqItem } from "@/data/adminMock";
 import { CATEGORIES } from "@/data/products";
@@ -235,36 +234,6 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Integration Status Badges */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-600">
-            <Database className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <span>Supabase Cloud Database & Storage</span>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                ONLINE
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
-              Target instance: <code className="text-slate-800 font-mono">exrgcryuyhkwpqsyciif.supabase.co</code> (Connected)
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden md:block">
-            <span className="text-xs font-bold text-slate-800 block">ImageKit CDN</span>
-            <span className="text-[11px] text-cyan-700 font-mono font-medium">ik.imagekit.io/wg5w5t4nz</span>
-          </div>
-          <div className="p-2 bg-cyan-50 rounded-xl border border-cyan-200 text-cyan-600">
-            <CloudLightning className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
-
       {/* Wholesale RFQs Management Section */}
       <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
         {/* Table Header Controls */}
@@ -379,7 +348,7 @@ export default function AdminDashboardPage() {
                           className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
                           title="Chat on WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5" />
+                          <WhatsAppIcon className="w-3.5 h-3.5" />
                         </a>
 
                         {/* View Modal */}
@@ -540,7 +509,7 @@ export default function AdminDashboardPage() {
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md shadow-brand-red/20"
                 >
-                  <MessageSquare className="w-4 h-4 text-white" />
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
                   <span>Reply to Client on WhatsApp</span>
                 </a>
               </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
-import Image from "next/image";
+import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -12,17 +11,16 @@ import {
   ThermometerSnowflake,
   ShieldCheck,
   Globe2,
-  Package,
   RotateCcw,
   SlidersHorizontal,
   ChevronDown,
   ChevronLeft,
   Loader2,
-  MessageCircle,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { EnquiryModal } from "@/components/EnquiryModal";
+import { ProductCard } from "@/components/ProductCard";
 
 // ─── Types (DB Schema) ────────────────────────────────────────────────────────
 interface Product {
@@ -108,6 +106,38 @@ function ProductsContent() {
       setSearchQuery(searchParam);
     }
   }, [categoryParam, searchParam]);
+
+  // ── Category pill strip: arrows show only when there is more to scroll ──
+  const pillsRef = useRef<HTMLDivElement>(null);
+  const [pillScroll, setPillScroll] = useState({ left: false, right: false });
+
+  const updatePillArrows = useCallback(() => {
+    const el = pillsRef.current;
+    if (!el) return;
+    setPillScroll({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    updatePillArrows();
+    window.addEventListener("resize", updatePillArrows);
+    return () => window.removeEventListener("resize", updatePillArrows);
+  }, [updatePillArrows, categories]);
+
+  // Keep the selected pill centred in the strip (horizontal only, never scrolls the page)
+  useEffect(() => {
+    const el = pillsRef.current;
+    const active = el?.querySelector<HTMLElement>('[data-active="true"]');
+    if (!el || !active) return;
+    el.scrollTo({ left: active.offsetLeft - el.clientWidth / 2 + active.offsetWidth / 2, behavior: "smooth" });
+  }, [selectedCategory, categories]);
+
+  const scrollPills = (dir: -1 | 1) => {
+    const el = pillsRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
+  };
 
   const handleCategorySelect = (slug: string) => {
     setSelectedCategory(slug);
@@ -219,11 +249,17 @@ function ProductsContent() {
             </p>
           </div>
 
-          {/* Category Pills */}
-          <div className="flex items-center gap-2.5 overflow-x-auto hide-scrollbar pt-6 pb-2">
+          {/* Category Pills (scrollable strip with arrows) */}
+          <div className="relative mt-6">
+          <div
+            ref={pillsRef}
+            onScroll={updatePillArrows}
+            className="relative flex items-center gap-2.5 overflow-x-auto hide-scrollbar py-2"
+          >
             <button
+              data-active={selectedCategory === "all"}
               onClick={() => handleCategorySelect("all")}
-              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === "all"
                   ? "bg-brand-red text-white shadow-md"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -234,8 +270,9 @@ function ProductsContent() {
             {categories.map((cat) => (
               <button
                 key={cat.slug}
+                data-active={selectedCategory === cat.slug}
                 onClick={() => handleCategorySelect(cat.slug)}
-                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat.slug
                     ? "bg-brand-red text-white shadow-md"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -244,6 +281,43 @@ function ProductsContent() {
                 {cat.name}
               </button>
             ))}
+          </div>
+
+            {/* Edge fades */}
+            <div
+              className={`pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-24 bg-gradient-to-r from-white via-white/80 to-transparent transition-opacity duration-200 ${
+                pillScroll.left ? "opacity-100" : "opacity-0"
+              }`}
+            />
+            <div
+              className={`pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-24 bg-gradient-to-l from-white via-white/80 to-transparent transition-opacity duration-200 ${
+                pillScroll.right ? "opacity-100" : "opacity-0"
+              }`}
+            />
+
+            {/* Arrows */}
+            <button
+              type="button"
+              onClick={() => scrollPills(-1)}
+              aria-label="Scroll categories left"
+              tabIndex={pillScroll.left ? 0 : -1}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-slate-200 shadow-md text-slate-700 hover:text-brand-red hover:border-brand-red/40 flex items-center justify-center transition-all cursor-pointer ${
+                pillScroll.left ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollPills(1)}
+              aria-label="Scroll categories right"
+              tabIndex={pillScroll.right ? 0 : -1}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-slate-200 shadow-md text-slate-700 hover:text-brand-red hover:border-brand-red/40 flex items-center justify-center transition-all cursor-pointer ${
+                pillScroll.right ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </section>
@@ -401,102 +475,11 @@ function ProductsContent() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                     {paginatedProducts.map((product) => (
-                      <div
+                      <ProductCard
                         key={product.id}
-                        className="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-red/40 hover:shadow-xl shadow-sm transition-all flex flex-col group overflow-hidden"
-                      >
-                        {/* Card Image */}
-                        <Link
-                          href={`/products/${product.category_slug}/${product.id}`}
-                          className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 flex items-center justify-center overflow-hidden"
-                        >
-                          {product.image ? (
-                            <Image
-                              src={product.image}
-                              alt={product.name}
-                              fill
-                              className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                            />
-                          ) : (
-                            <Package className="w-16 h-16 text-slate-300" />
-                          )}
-
-                          {/* Origin Tag */}
-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-slate-800 border border-slate-200/80 shadow-2xs">
-                            {product.origin}
-                          </div>
-
-                          {/* Storage Tag */}
-                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-brand-red border border-slate-200/80 shadow-2xs">
-                            {product.storage_type}
-                          </div>
-                        </Link>
-
-                        {/* Card Info */}
-                        <div className="p-5 space-y-3 flex-1">
-                          <Link
-                            href={`/products?category=${product.category_slug}`}
-                            className="text-xs font-black uppercase tracking-wider text-brand-red hover:underline block"
-                          >
-                            {product.category_name}
-                          </Link>
-
-                          <Link
-                            href={`/products/${product.category_slug}/${product.id}`}
-                            className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-red transition-colors leading-snug block"
-                          >
-                            {product.name}
-                          </Link>
-
-                          <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed line-clamp-2">
-                            {product.description}
-                          </p>
-
-                          {/* Specs */}
-                          <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">MOQ:</span>
-                              <span className="font-bold text-slate-800">{product.moq}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Packaging:</span>
-                              <span className="font-semibold text-slate-700 truncate max-w-[170px]">{product.packaging}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Standard:</span>
-                              <span className="font-semibold text-emerald-600 truncate">{product.certification}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Card Actions */}
-                        <div className="p-5 pt-0 flex items-center gap-2">
-                          <button
-                            onClick={() => handleOpenProductEnquiry(product)}
-                            className="flex-1 bg-brand-red hover:bg-red-700 text-white py-2.5 rounded-full text-xs font-bold shadow-sm hover:shadow transition-all text-center cursor-pointer"
-                          >
-                            Enquire Now
-                          </button>
-                          <a
-                            href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to request wholesale pricing for ${product.name} (${product.category_name}).`)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-9 h-9 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow-sm"
-                            title="Quick WhatsApp Enquiry"
-                            aria-label={`WhatsApp Enquiry for ${product.name}`}
-                          >
-                            <MessageCircle className="w-4 h-4 fill-current" />
-                          </a>
-                          <Link
-                            href={`/products/${product.category_slug}/${product.id}`}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors"
-                            title="View Full Product Details"
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </Link>
-                        </div>
-                      </div>
+                        product={product}
+                        onEnquire={() => handleOpenProductEnquiry(product)}
+                      />
                     ))}
                   </div>
 

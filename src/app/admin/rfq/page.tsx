@@ -5,12 +5,12 @@ import {
   Inbox, 
   Search, 
   Download, 
-  MessageSquare, 
   Eye, 
   X,
   Loader2,
   RefreshCw
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { toast } from "sonner";
 import { MOCK_ADMIN_RFQS, AdminRfqItem } from "@/data/adminMock";
 
@@ -278,7 +278,7 @@ export default function AdminRfqPage() {
                           className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
                           title="Chat on WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5" />
+                          <WhatsAppIcon className="w-3.5 h-3.5" />
                         </a>
                         <button
                           onClick={() => setSelectedRfq(rfq)}
@@ -397,7 +397,7 @@ export default function AdminRfqPage() {
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md shadow-brand-red/25"
                 >
-                  <MessageSquare className="w-4 h-4 text-white" />
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
                   <span>Send Quotation on WhatsApp</span>
                 </a>
               </div>

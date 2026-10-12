@@ -37,7 +37,8 @@ export async function GET() {
           titleHighlight: row.title_highlight || heroData.titleHighlight,
           subtitle: row.subtitle || heroData.subtitle,
           heroImage: row.hero_image || heroData.heroImage,
-          mobileHeroImage: row.hero_image || heroData.mobileHeroImage,
+          // empty = reuse the desktop image on mobile
+          mobileHeroImage: row.mobile_hero_image || "",
           button1Text: row.button1_text || heroData.button1Text,
           button1Link: row.button1_link || heroData.button1Link,
           button2Text: row.button2_text || heroData.button2Text,
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
   try {
     const body: HomePageCmsData = await req.json();
     const { hero, quickCategories, clientsPartners } = body;
+    let warning: string | undefined;
 
     const headers = {
       apikey: SUPABASE_KEY,
@@ -108,8 +110,8 @@ export async function POST(req: NextRequest) {
       Prefer: "resolution=merge-duplicates",
     };
 
-    // 1. Upsert Hero in Supabase
-    if (hero) {
+    // 1. Upsert Hero in Supabase (skip when a caller only sends partners/categories with an empty hero)
+    if (hero && Object.keys(hero).length > 0) {
       const heroPayload = {
         id: "default_hero",
         badge_text: hero.badgeText,
@@ -117,6 +119,8 @@ export async function POST(req: NextRequest) {
         title_highlight: hero.titleHighlight,
         subtitle: hero.subtitle,
         hero_image: hero.heroImage,
+        // only touch the mobile image when the caller actually sent it
+        ...(hero.mobileHeroImage !== undefined && { mobile_hero_image: hero.mobileHeroImage || null }),
         button1_text: hero.button1Text,
         button1_link: hero.button1Link,
         button2_text: hero.button2Text,
@@ -124,11 +128,23 @@ export async function POST(req: NextRequest) {
         updated_at: new Date().toISOString(),
       };
 
-      await fetch(`${SUPABASE_URL}/rest/v1/homepage_hero`, {
+      const heroRes = await fetch(`${SUPABASE_URL}/rest/v1/homepage_hero`, {
         method: "POST",
         headers,
         body: JSON.stringify(heroPayload),
       });
+
+      // DBs created before the mobile image existed lack the column: save the rest of the hero anyway
+      if (!heroRes.ok && (await heroRes.text()).includes("mobile_hero_image")) {
+        const { mobile_hero_image: _omit, ...legacyPayload } = heroPayload as typeof heroPayload & { mobile_hero_image?: string | null };
+        await fetch(`${SUPABASE_URL}/rest/v1/homepage_hero`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(legacyPayload),
+        });
+        warning =
+          "Mobile hero image was not saved: run `ALTER TABLE public.homepage_hero ADD COLUMN IF NOT EXISTS mobile_hero_image TEXT;` in Supabase.";
+      }
     }
 
     // 2. Sync Categories (Clear old set and re-insert current list to guarantee deletes persist)
@@ -201,6 +217,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Homepage CMS data successfully persisted and synchronized in Supabase DB",
+      warning,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Error saving to database";

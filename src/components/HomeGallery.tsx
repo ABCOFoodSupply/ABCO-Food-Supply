@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Maximize2, X, ChevronLeft, ChevronRight, Images } from "lucide-react";
+import { useSection } from "./SiteSectionsProvider";
 
 interface GalleryItem {
   id: string;
@@ -45,18 +46,20 @@ const FALLBACK_HOME_GALLERY: GalleryItem[] = [
 ];
 
 export const HomeGallery: React.FC = () => {
+  const content = useSection("gallery");
   const [items, setItems] = useState<GalleryItem[]>(FALLBACK_HOME_GALLERY);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchGallery() {
       try {
-        const res = await fetch("/api/gallery", { cache: "no-store" });
+        // Only the photos the admin marked "Show on Home Page"
+        const res = await fetch("/api/gallery?homepage=true", { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          if (json.success && Array.isArray(json.data)) {
             setItems(
-              json.data.slice(0, 6).map((item: any) => ({
+              json.data.map((item: any) => ({
                 id: item.id,
                 title: item.title,
                 image: item.image,
@@ -92,6 +95,9 @@ export const HomeGallery: React.FC = () => {
   const selectedItem =
     selectedItemIndex !== null ? items[selectedItemIndex] : null;
 
+  // Admin switched every photo off the homepage: hide the section
+  if (items.length === 0) return null;
+
   return (
     <section className="py-14 sm:py-20 bg-slate-50/70 border-t border-slate-200/70">
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
@@ -100,13 +106,13 @@ export const HomeGallery: React.FC = () => {
           <div className="space-y-2 max-w-xl">
             <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase flex items-center gap-1.5">
               <Images className="w-4 h-4" />
-              OPERATIONAL SHOWCASE
+              {content.eyebrow}
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Facility, Fleet &amp; Operations Gallery
+              {content.title}
             </h2>
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-              Explore our Jubail temperature-controlled cold chain, logistics fleets, and distribution infrastructure.
+              {content.subtitle}
             </p>
           </div>
 
@@ -114,7 +120,7 @@ export const HomeGallery: React.FC = () => {
             href="/gallery"
             className="self-start sm:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap"
           >
-            <span>View Full Gallery</span>
+            <span>{content.buttonText}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -144,11 +150,11 @@ export const HomeGallery: React.FC = () => {
                 </div>
 
                 <div className="p-4 sm:p-5 space-y-1.5">
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-brand-red transition-colors leading-snug line-clamp-1">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-brand-red transition-colors leading-snug">
                     {item.title}
                   </h3>
                   {item.caption && (
-                    <p className="text-xs text-slate-500 font-normal leading-relaxed line-clamp-2">
+                    <p className="text-xs text-slate-500 font-normal leading-relaxed">
                       {item.caption}
                     </p>
                   )}
@@ -156,7 +162,7 @@ export const HomeGallery: React.FC = () => {
               </div>
 
               <div className="px-4 sm:px-5 pb-4 pt-1 flex items-center justify-between text-[11px] text-slate-400 font-semibold border-t border-slate-100">
-                <span className="truncate max-w-[150px]">{item.location}</span>
+                <span className="min-w-0 break-words pr-2">{item.location}</span>
                 <span className="text-brand-red font-bold flex items-center gap-0.5 shrink-0">
                   View
                   <ArrowRight className="w-3 h-3" />
@@ -178,7 +184,7 @@ export const HomeGallery: React.FC = () => {
             className="relative bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
           >
             <div className="px-5 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-base sm:text-lg font-black text-slate-900 truncate pr-4">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 min-w-0 break-words pr-4">
                 {selectedItem.title}
               </h3>
               <button

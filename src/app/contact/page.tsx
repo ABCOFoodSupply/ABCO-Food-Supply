@@ -7,7 +7,6 @@ import {
   Phone,
   Mail,
   Clock,
-  MessageCircle,
   Building2,
   ChevronRight,
   Send,
@@ -20,13 +19,17 @@ import {
   ShieldCheck,
   Headphones
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { EnquiryModal } from "@/components/EnquiryModal";
+import { useSection } from "@/components/SiteSectionsProvider";
+import { phoneDigits } from "@/lib/siteSections";
 
 export default function ContactPage() {
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
+  const contact = useSection("contact");
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -245,7 +248,7 @@ export default function ContactPage() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+966 57 299 5987"
+                      placeholder="+966 5X XXX XXXX"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:border-brand-red focus:bg-white focus:ring-1 focus:ring-brand-red/30 outline-none transition-all"
                     />
                   </div>
@@ -418,8 +421,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">Warehouse & Office Address</p>
-                      <p className="text-slate-600">Jubail,
-Kingdom of Saudi Arabia</p>
+                      <p className="text-slate-600">{contact.address}</p>
                     </div>
                   </div>
 
@@ -429,7 +431,11 @@ Kingdom of Saudi Arabia</p>
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">Telephone Inquiries</p>
-                      <p className="text-slate-600">+966 13 XXX XXXX / +966 57 299 5987</p>
+                      <p className="text-slate-600">
+                        <a href={`tel:+${phoneDigits(contact.phone)}`} className="hover:text-brand-red hover:underline">
+                          {contact.phone}
+                        </a>
+                      </p>
                     </div>
                   </div>
 
@@ -440,10 +446,10 @@ Kingdom of Saudi Arabia</p>
                     <div>
                       <p className="font-bold text-slate-900">Department Inboxes</p>
                       <p className="text-slate-600">
-                        Sales: <a href="mailto: abcofoodsupply@gmail.com" className="text-brand-red hover:underline"> abcofoodsupply@gmail.com</a>
+                        Sales: <a href={`mailto:${contact.email}`} className="text-brand-red hover:underline">{contact.email}</a>
                       </p>
                       <p className="text-slate-600">
-                        Procurement: <a href="mailto: abcofoodsupply@gmail.com" className="text-brand-red hover:underline"> abcofoodsupply@gmail.com</a>
+                        Procurement: <a href={`mailto:${contact.email}`} className="text-brand-red hover:underline">{contact.email}</a>
                       </p>
                     </div>
                   </div>
@@ -454,8 +460,8 @@ Kingdom of Saudi Arabia</p>
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">Operating Schedule</p>
-                      <p className="text-slate-600">Sunday - Thursday: 8:00 AM - 5:30 PM</p>
-                      <p className="text-slate-500 text-xs font-semibold">Cold storage dispatch operating 24/7 on active contracts.</p>
+                      <p className="text-slate-600">{contact.hours}</p>
+                      {contact.hoursNote && <p className="text-slate-500 text-xs font-semibold">{contact.hoursNote}</p>}
                     </div>
                   </div>
                 </div>
@@ -463,12 +469,14 @@ Kingdom of Saudi Arabia</p>
                 {/* Instant WhatsApp Action Card */}
                 <div className="pt-2">
                   <a
-                    href="https://wa.me/966572995987?text=Hello%20ABCO%20Food%20Supply,%20I%20would%20like%20to%20request%20a%20commercial%20quotation."
+                    href={`https://wa.me/${phoneDigits(contact.whatsapp || contact.phone)}?text=${encodeURIComponent(
+                      "Hello ABCO Food Supply, I would like to request a commercial quotation."
+                    )}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 rounded-full font-bold text-sm shadow-md flex items-center justify-center gap-2.5 transition-all"
                   >
-                    <MessageCircle className="w-5 h-5 fill-current" />
+                    <WhatsAppIcon className="w-5 h-5" />
                     <span>Instant WhatsApp Procurement Desk</span>
                   </a>
                 </div>

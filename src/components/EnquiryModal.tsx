@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Send, Sparkles, MessageCircle } from "lucide-react";
+import { X, Send, Sparkles } from "lucide-react";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { useSection } from "@/components/SiteSectionsProvider";
+import { phoneDigits } from "@/lib/siteSections";
 import { toast } from "sonner";
 
 interface EnquiryModalProps {
@@ -26,6 +29,8 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
   });
 
   const [loading, setLoading] = useState(false);
+  const contact = useSection("contact");
+  const waNumber = phoneDigits(contact.whatsapp || contact.phone);
 
   if (!isOpen) return null;
 
@@ -159,7 +164,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+966 57 299 5987"
+                placeholder="+966 5X XXX XXXX"
                 className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none transition-colors"
               />
             </div>
@@ -223,12 +228,12 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
           {/* Action buttons */}
           <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
             <a
-              href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to enquire about wholesale supply for ${formData.category || "Food Products"}.`)}`}
+              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to enquire about wholesale supply for ${formData.category || "Food Products"}.`)}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs sm:text-sm font-bold shadow-sm transition-all"
             >
-              <MessageCircle className="w-4 h-4 fill-current" />
+              <WhatsAppIcon className="w-4 h-4" />
               <span>WhatsApp Inquiry</span>
             </a>
 

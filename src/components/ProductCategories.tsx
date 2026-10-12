@@ -3,19 +3,11 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Package, Sparkles, MessageCircle } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { ProductCard, type ProductCardData } from "./ProductCard";
+import { useSection } from "./SiteSectionsProvider";
 
-interface ProductItem {
-  id: string;
-  name: string;
-  category_slug: string;
-  category_name: string;
-  image: string;
-  origin?: string;
-  storage_type?: string;
-  moq?: string;
-  packaging?: string;
-  description?: string;
+interface ProductItem extends ProductCardData {
   featured_on_homepage?: boolean;
 }
 
@@ -37,9 +29,11 @@ const FALLBACK_CATEGORIES: CategoryItem[] = [
 
 interface ProductCategoriesProps {
   onSelectCategory?: (category: string) => void;
+  onEnquireProduct?: (subject: string) => void;
 }
 
-export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCategory }) => {
+export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCategory, onEnquireProduct }) => {
+  const content = useSection("products");
   const [featuredProducts, setFeaturedProducts] = useState<ProductItem[]>([]);
   const [categoriesFallback, setCategoriesFallback] = useState<CategoryItem[]>(FALLBACK_CATEGORIES);
   const [loading, setLoading] = useState(true);
@@ -109,13 +103,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
           <div className="space-y-1 max-w-2xl">
             <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-brand-red" />
-              OUR PRODUCTS
+              {content.eyebrow}
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Wide Range of Imported &amp; Locally Manufactured Food Products
+              {content.title}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              Featured wholesale commodities ready for HORECA, commercial catering, and retail distribution across Saudi Arabia.
+              {content.subtitle}
             </p>
           </div>
 
@@ -123,7 +117,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
             href="/products"
             className="self-start md:self-auto bg-brand-red hover:bg-brand-red-dark text-white px-6 py-3 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-md transition-all flex items-center gap-2 group cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span>View All Products</span>
+            <span>{content.buttonText}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -134,89 +128,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
             Loading products...
           </div>
         ) : featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {featuredProducts.slice(0, 8).map((p) => (
-              <div
+              <ProductCard
                 key={p.id}
-                className="group rounded-3xl overflow-hidden border border-slate-200/90 hover:border-brand-red/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between bg-white"
-              >
-                <div>
-                  {/* Product Image */}
-                  <Link
-                    href={`/products/${p.category_slug}/${p.id}`}
-                    className="relative aspect-square w-full overflow-hidden bg-slate-50 p-3 flex items-center justify-center block border-b border-slate-100"
-                  >
-                    {p.image ? (
-                      <Image
-                        src={p.image}
-                        alt={p.name}
-                        fill
-                        className="object-contain p-3 group-hover:scale-108 transition-transform duration-500"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                    ) : (
-                      <Package className="w-12 h-12 text-slate-300 m-auto" />
-                    )}
-
-                    {/* Featured Pill */}
-                    {p.featured_on_homepage && (
-                      <span className="absolute top-2.5 left-2.5 bg-brand-red text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
-                        Featured
-                      </span>
-                    )}
-
-                    {p.storage_type && (
-                      <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-xs text-[10px] font-bold text-slate-700 px-2 py-0.5 rounded-full border border-slate-200 shadow-2xs">
-                        {p.storage_type}
-                      </span>
-                    )}
-                  </Link>
-
-                  {/* Product Info */}
-                  <div className="p-4 space-y-1.5">
-                    <Link
-                      href={`/products?category=${p.category_slug}`}
-                      className="text-[11px] font-black uppercase tracking-wider text-brand-red hover:underline block truncate"
-                    >
-                      {p.category_name}
-                    </Link>
-
-                    <Link
-                      href={`/products/${p.category_slug}/${p.id}`}
-                      className="text-sm font-bold text-slate-900 group-hover:text-brand-red transition-colors line-clamp-1 block leading-snug"
-                      title={p.name}
-                    >
-                      {p.name}
-                    </Link>
-
-                    {p.moq && (
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        MOQ: <strong className="text-slate-800">{p.moq}</strong>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Actions */}
-                <div className="p-4 pt-0 border-t border-slate-100 mt-2 flex items-center justify-between gap-2">
-                  <Link
-                    href={`/products/${p.category_slug}/${p.id}`}
-                    className="flex-1 text-center py-2 px-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
-                  >
-                    Details
-                  </Link>
-                  <a
-                    href={`https://wa.me/966572995987?text=${encodeURIComponent(`Hello ABCO Food Supply, I would like to enquire about ${p.name} (${p.category_name}).`)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-8 h-8 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow-2xs"
-                    title="WhatsApp Inquiry"
-                    aria-label={`WhatsApp Inquiry for ${p.name}`}
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                  </a>
-                </div>
-              </div>
+                product={p}
+                onEnquire={() => onEnquireProduct?.(`${p.name} (${p.category_name})`)}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              />
             ))}
           </div>
         ) : (
@@ -238,7 +157,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({ onSelectCa
                   />
                 </div>
                 <div className="p-3 text-center border-t border-slate-100 bg-white">
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-brand-red transition-colors line-clamp-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-brand-red transition-colors">
                     {cat.title}
                   </h3>
                 </div>

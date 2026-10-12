@@ -2,14 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  ShieldCheck,
-  Award,
-  Truck,
-  Settings,
-  Repeat,
-  Tag,
-  Clock,
-  HeartHandshake,
   Target,
   Eye,
   Gem,
@@ -17,80 +9,18 @@ import {
   Sparkles,
   Check,
 } from "lucide-react";
+import { useSection } from "./SiteSectionsProvider";
+import { getIcon } from "@/lib/iconRegistry";
 
 export const WhyChooseUs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number | null>(null);
 
-  const strengths = [
-    {
-      id: 1,
-      title: "Trusted Local & Global Sourcing",
-      desc: "Direct partnerships with certified growers, millers, and processors across 30+ countries.",
-      icon: ShieldCheck,
-      highlight: "Global Network",
-    },
-    {
-      id: 2,
-      title: "Quality Products",
-      desc: "Rigorous quality inspection meeting Saudi Food & Drug Authority (SFDA) standards.",
-      icon: Award,
-      highlight: "100% Certified",
-    },
-    {
-      id: 3,
-      title: "Reliable Supply Chain",
-      desc: "Temperature-controlled multi-zone logistics ensuring zero cold-chain breaks.",
-      icon: Truck,
-      highlight: "Cold Chain 24/7",
-    },
-    {
-      id: 4,
-      title: "End-to-End Procurement Support",
-      desc: "Tailored bulk orders, scheduled deliveries, and dedicated B2B institutional account managers.",
-      icon: Settings,
-      highlight: "Turnkey Service",
-    },
-    {
-      id: 5,
-      title: "Flexible Supply Solutions",
-      desc: "Customized portioning, private packaging, and adaptable delivery frequencies.",
-      icon: Repeat,
-      highlight: "Tailored Plans",
-    },
-    {
-      id: 6,
-      title: "Competitive Pricing",
-      desc: "High-volume direct procurement enabling industry-leading wholesale market rates.",
-      icon: Tag,
-      highlight: "Best B2B Rates",
-    },
-    {
-      id: 7,
-      title: "Timely Delivery",
-      desc: "Guaranteed on-schedule fulfillment to commercial kitchens, hypermarkets, and hotels.",
-      icon: Clock,
-      highlight: "Guaranteed SLA",
-    },
-    {
-      id: 8,
-      title: "Customer-Centric Service",
-      desc: "Rapid responsiveness, responsive inquiry resolution, and 24/7 client coordination.",
-      icon: HeartHandshake,
-      highlight: "Dedicated Desk",
-    },
-  ];
+  const content = useSection("whyChooseUs");
+  const strengths = content.strengths;
+  const values = content.values;
 
-  const values = [
-    { label: "Integrity", desc: "Transparent dealings & contracts" },
-    { label: "Quality", desc: "Strict hygiene & halal guidelines" },
-    { label: "Reliability", desc: "Dependable supply without delays" },
-    { label: "Customer Focus", desc: "Customized client specifications" },
-    { label: "Partnership", desc: "Long-term win-win collaboration" },
-    { label: "Continuous Improvement", desc: "Constant technological innovation" },
-  ];
-
-  const handleCardClick = (strength: (typeof strengths)[0]) => {
-    setActiveTab(strength.id);
+  const handleCardClick = (index: number) => {
+    setActiveTab(index);
   };
 
   return (
@@ -101,29 +31,29 @@ export const WhyChooseUs: React.FC = () => {
           <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200/80 px-4 py-1.5 rounded-full">
             <Sparkles className="w-3.5 h-3.5 text-brand-red" />
             <span className="text-xs font-black tracking-widest text-brand-red uppercase">
-              WHY ABCO FOOD SUPPLY?
+              {content.eyebrow}
             </span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-            Setting the Benchmark in <br className="hidden sm:inline" />
-            <span className="text-brand-red">Saudi Food Distribution</span>
+            {content.title} <br className="hidden sm:inline" />
+            <span className="text-brand-red">{content.titleHighlight}</span>
           </h2>
 
           <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto pt-1">
-            We bridge global food producers with the Kingdom&apos;s leading retailers, HORECA establishments, and catering contractors through dependable operations.
+            {content.subtitle}
           </p>
         </div>
 
         {/* 8 Strengths Grid with Creative Human Polish */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-16">
-          {strengths.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+          {strengths.map((item, index) => {
+            const Icon = getIcon(item.icon);
+            const isActive = activeTab === index;
             return (
               <div
-                key={item.id}
-                onClick={() => handleCardClick(item)}
+                key={`${item.title}-${index}`}
+                onClick={() => handleCardClick(index)}
                 className={`relative p-5 sm:p-6 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between group bg-white ${
                   isActive
                     ? "border-brand-red ring-2 ring-brand-red/20 shadow-xl -translate-y-1"
@@ -148,7 +78,7 @@ export const WhyChooseUs: React.FC = () => {
 
                   {/* Description */}
                   <p className="text-sm text-slate-600 font-normal leading-relaxed">
-                    {item.desc}
+                    {item.description}
                   </p>
                 </div>
 
@@ -173,21 +103,21 @@ export const WhyChooseUs: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[11px] font-black tracking-widest text-brand-red uppercase block">
-                    PURPOSE & COMMITMENT
+                    {content.mission.tag}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                    Our Mission
+                    {content.mission.title}
                   </h3>
                 </div>
               </div>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed text-justify">
-                To deliver premium food products and reliable supply solutions through trusted sourcing, efficient procurement, dependable cold-chain operations, and responsive customer service tailored to the Saudi food economy.
+                {content.mission.text}
               </p>
             </div>
 
             <div className="pt-6 mt-6 border-t border-slate-100 flex items-center gap-2 text-xs font-bold text-slate-700">
               <CheckCircle2 className="w-4 h-4 text-brand-green shrink-0" />
-              <span>SFDA & HACCP Quality Compliant</span>
+              <span>{content.mission.footer}</span>
             </div>
           </div>
 
@@ -201,21 +131,21 @@ export const WhyChooseUs: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[11px] font-black tracking-widest text-emerald-600 uppercase block">
-                    KINGDOM VISION 2030
+                    {content.vision.tag}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                    Our Vision
+                    {content.vision.title}
                   </h3>
                 </div>
               </div>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed text-justify">
-                To become the most trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC, strengthening national food security through modern logistics and strategic supplier partnerships.
+                {content.vision.text}
               </p>
             </div>
 
             <div className="pt-6 mt-6 border-t border-slate-100 flex items-center gap-2 text-xs font-bold text-slate-700">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Aligned with Saudi Vision 2030</span>
+              <span>{content.vision.footer}</span>
             </div>
           </div>
 
@@ -229,25 +159,25 @@ export const WhyChooseUs: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[11px] font-black tracking-widest text-amber-600 uppercase block">
-                    FOUNDATIONAL PILLARS
+                    {content.valuesTag}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                    Our Values
+                    {content.valuesTitle}
                   </h3>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-2.5">
-                {values.map((val) => (
+                {values.map((val, i) => (
                   <div
-                    key={val.label}
+                    key={`${val.label}-${i}`}
                     className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-red-50/40 hover:border-red-200 transition-colors"
                   >
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                       <CheckCircle2 className="w-3.5 h-3.5 text-brand-red shrink-0" />
                       <span>{val.label}</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-0.5 leading-tight line-clamp-1">
+                    <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">
                       {val.desc}
                     </p>
                   </div>
@@ -257,7 +187,7 @@ export const WhyChooseUs: React.FC = () => {
 
             <div className="pt-6 mt-6 border-t border-slate-100 flex items-center gap-2 text-xs font-bold text-slate-700">
               <CheckCircle2 className="w-4 h-4 text-brand-red shrink-0" />
-              <span>Commitment to Client Success</span>
+              <span>{content.valuesFooter}</span>
             </div>
           </div>
         </div>

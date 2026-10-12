@@ -15,7 +15,8 @@ import {
   Loader2,
   RefreshCw,
   X,
-  Upload
+  Upload,
+  Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchHomePageCmsFromDb } from "@/lib/cmsData";
@@ -42,6 +43,34 @@ export default function AdminPartnersPage() {
   const [newLocation, setNewLocation] = useState("Kingdom of Saudi Arabia");
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setNewName("");
+    setNewImage("");
+    setNewType("");
+    setNewLocation("Kingdom of Saudi Arabia");
+  };
+
+  const openAdd = () => {
+    resetForm();
+    setEditingId(null);
+    setIsAddOpen(true);
+  };
+
+  const openEdit = (partner: PartnerItem) => {
+    setNewName(partner.name);
+    setNewImage(partner.image || "");
+    setNewType(partner.type || "");
+    setNewLocation(partner.location || "");
+    setEditingId(partner.id);
+    setIsAddOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsAddOpen(false);
+    setEditingId(null);
+  };
 
   const loadPartners = async () => {
     setIsLoading(true);
@@ -100,14 +129,17 @@ export default function AdminPartnersPage() {
     setIsSaving(true);
     try {
       const newPartner: PartnerItem = {
-        id: `partner-${Date.now()}`,
+        id: editingId || `partner-${Date.now()}`,
         name: newName.trim(),
         image: newImage.trim(),
         type: newType.trim(),
         location: newLocation.trim(),
       };
 
-      const updated = [...partners, newPartner];
+      // Editing keeps the partner in its place; adding appends
+      const updated = editingId
+        ? partners.map((p) => (p.id === editingId ? { ...p, ...newPartner } : p))
+        : [...partners, newPartner];
 
       const res = await fetch("/api/cms", {
         method: "POST",
@@ -122,14 +154,14 @@ export default function AdminPartnersPage() {
       if (!res.ok) throw new Error("Failed to save partner to database");
 
       setPartners(updated);
-      setIsAddOpen(false);
-      setNewName("");
-      setNewImage("");
-      setNewType("");
-      toast.success(`Partner "${newPartner.name}" added successfully!`);
+      toast.success(
+        editingId ? `Partner "${newPartner.name}" updated!` : `Partner "${newPartner.name}" added successfully!`
+      );
+      closeModal();
+      resetForm();
     } catch (err) {
       console.error(err);
-      toast.error("Could not add partner. Please try again.");
+      toast.error(editingId ? "Could not update partner. Please try again." : "Could not add partner. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -190,7 +222,7 @@ export default function AdminPartnersPage() {
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-brand-red" : ""}`} />
           </button>
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={openAdd}
             className="inline-flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md shadow-brand-red/25 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 text-white" />
@@ -238,23 +270,33 @@ export default function AdminPartnersPage() {
               className="bg-white border border-slate-200 hover:border-brand-red/40 rounded-3xl p-6 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="relative w-28 h-12 bg-white rounded-xl p-2 border border-slate-200 flex items-center justify-center overflow-hidden shadow-2xs">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm shrink-0">
                     <Image
                       src={partner.image || "/categories/partner-1.png"}
                       alt={partner.name}
-                      width={90}
-                      height={36}
-                      className="object-contain max-h-8"
+                      fill
+                      className="object-contain"
+                      sizes="112px"
                     />
                   </div>
-                  <button
-                    onClick={() => handleDeletePartner(partner.id, partner.name)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-brand-red hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Remove partner"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(partner)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-brand-red hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors cursor-pointer"
+                      title="Edit partner"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeletePartner(partner.id, partner.name)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-brand-red hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Remove partner"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <h3 className="text-lg font-black text-slate-900">{partner.name}</h3>
@@ -289,9 +331,11 @@ export default function AdminPartnersPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-black text-slate-900">Add Strategic Partner Brand</h3>
+              <h3 className="text-lg font-black text-slate-900">
+                {editingId ? "Edit Partner Brand" : "Add Strategic Partner Brand"}
+              </h3>
               <button
-                onClick={() => setIsAddOpen(false)}
+                onClick={() => closeModal()}
                 className="p-1 rounded-lg text-slate-400 hover:text-black"
               >
                 <X className="w-5 h-5" />
@@ -336,14 +380,14 @@ export default function AdminPartnersPage() {
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Partner Logo (ImageKit CDN)</label>
                 <div className="flex items-center gap-3">
-                  <div className="w-16 h-10 border border-slate-200 rounded-lg p-1 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="relative w-20 h-20 border border-slate-200 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden">
                     {newImage ? (
                       <Image
                         src={newImage}
                         alt="Preview"
-                        width={60}
-                        height={30}
-                        className="object-contain max-h-8"
+                        fill
+                        className="object-contain"
+                        sizes="80px"
                       />
                     ) : (
                       <span className="text-[10px] text-slate-400 text-center leading-tight">No logo</span>
@@ -368,7 +412,7 @@ export default function AdminPartnersPage() {
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsAddOpen(false)}
+                  onClick={() => closeModal()}
                   className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
                   Cancel
@@ -379,7 +423,7 @@ export default function AdminPartnersPage() {
                   className="bg-brand-red hover:bg-red-700 text-white font-bold px-5 py-2 rounded-xl flex items-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Partner to DB</span>
+                  <span>{editingId ? "Save Changes" : "Save Partner to DB"}</span>
                 </button>
               </div>
             </form>

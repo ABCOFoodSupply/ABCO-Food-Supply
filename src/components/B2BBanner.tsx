@@ -3,19 +3,18 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Boxes, Tag, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, Truck, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useSection } from "./SiteSectionsProvider";
+import { getIcon } from "@/lib/iconRegistry";
 
 interface B2BBannerProps {
   onShopNow?: () => void;
 }
 
 export const B2BBanner: React.FC<B2BBannerProps> = ({ onShopNow }) => {
-  const highlights = [
-    { label: "Bulk Supply", icon: Boxes },
-    { label: "Best Prices", icon: Tag },
-    { label: "Quality Assured", icon: ShieldCheck },
-  ];
+  const content = useSection("b2b");
+  const highlights = content.highlights;
 
   const handleShopNow = () => {
     toast.success("Opening Wholesale Food Requisition", {
@@ -30,91 +29,106 @@ export const B2BBanner: React.FC<B2BBannerProps> = ({ onShopNow }) => {
   };
 
   return (
-    <section className="py-8 md:py-12 bg-white w-full overflow-hidden">
-      {/* FULL WIDTH B2B PROMOTIONAL BANNER - FULLY RESPONSIVE */}
-      <div className="relative w-full min-h-[420px] md:min-h-[460px] lg:min-h-[480px] flex items-center bg-white border-y border-slate-100">
-        {/* Desktop / Tablet Background Image */}
-        <div className="hidden md:block absolute inset-0 z-0">
-          <Image
-            src="/categories/mix-product.png"
-            alt="Buy Any Food Products for Your Business Needs - Fresh assortment"
-            fill
-            priority
-            className="object-cover object-right lg:object-[85%_center]"
-            sizes="100vw"
+    <section className="py-10 md:py-16 bg-white w-full">
+      <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
+        {/* B2B PROMOTIONAL BANNER CARD */}
+        <div className="relative overflow-hidden rounded-3xl sm:rounded-[2rem] border border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-white shadow-sm">
+          {/* Decorative background */}
+          <div className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-red/[0.04] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 right-[20%] w-[28rem] h-[28rem] rounded-full bg-slate-100/70 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.35]"
+            style={{
+              backgroundImage: "radial-gradient(rgba(148,163,184,0.35) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+              maskImage: "linear-gradient(to right, transparent 40%, black 100%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 40%, black 100%)",
+            }}
           />
-        </div>
 
-        {/* Top-Right Badges on Desktop */}
-        <div className="hidden md:flex absolute top-6 right-8 lg:right-24 z-10 items-center gap-6">
-          {highlights.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.label}
-                className="flex items-center gap-2 text-xs lg:text-sm font-semibold text-slate-800"
-              >
-                <div className="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0">
-                  <Icon className="w-3.5 h-3.5 text-slate-800" />
-                </div>
-                <span>{item.label}</span>
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-6 items-center p-6 sm:p-10 lg:p-12 xl:p-16">
+            {/* Text Column */}
+            <div className="space-y-5 sm:space-y-6 max-w-xl">
+              {/* Eyebrow */}
+              <span className="inline-flex items-center gap-1.5 bg-white text-brand-red border border-red-100 shadow-sm px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" />
+                {content.eyebrow}
+              </span>
+
+              {/* Headline */}
+              <h2 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight leading-[1.1] text-slate-900">
+                <span className="text-brand-red">{content.titleHighlight}</span> {content.titleLine1}{" "}
+                <br className="hidden sm:inline" />
+                {content.titleLine2}
+              </h2>
+
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+                {content.subtitle}
+              </p>
+
+              {/* Highlights */}
+              <div className="flex flex-wrap gap-2.5 sm:gap-3">
+                {highlights.map((item, i) => {
+                  const Icon = getIcon(item.icon);
+                  return (
+                    <div
+                      key={`${item.label}-${i}`}
+                      className="flex items-center gap-2 bg-white/90 border border-slate-200/90 shadow-sm pl-1.5 pr-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold text-slate-800"
+                    >
+                      <span className="w-7 h-7 rounded-full bg-red-50 text-brand-red flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5" />
+                      </span>
+                      {item.label}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
 
-        {/* Content */}
-        <div className="relative z-10 w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28 py-8 md:py-14">
-          <div className="max-w-xl lg:max-w-2xl space-y-4 sm:space-y-5">
-            {/* Mobile Badges */}
-            <div className="flex md:hidden flex-wrap items-center gap-2.5 pb-1">
-              {highlights.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200"
-                  >
-                    <Icon className="w-3.5 h-3.5 text-slate-700" />
-                    <span>{item.label}</span>
-                  </div>
-                );
-              })}
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <Link
+                  href={content.primaryLink || "/products"}
+                  className="bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3.5 rounded-full text-base font-bold tracking-wide shadow-lg shadow-brand-red/25 hover:shadow-xl hover:shadow-brand-red/30 transition-all inline-flex items-center justify-center gap-2.5 group"
+                >
+                  <span>{content.primaryText}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <button
+                  onClick={handleShopNow}
+                  className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 hover:border-brand-red/40 px-7 py-3.5 rounded-full text-base font-bold shadow-sm transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-brand-red" />
+                  <span>{content.secondaryText}</span>
+                </button>
+              </div>
             </div>
 
-            {/* Headline */}
-            <h2 className="text-3xl sm:text-4xl md:text-[44px] font-black tracking-tight leading-[1.15]">
-              <span className="text-brand-red">Buy Any</span>{" "}
-              <span className="text-slate-900">Food Products</span> <br className="hidden sm:inline" />
-              <span className="text-slate-900">for Your Business Needs</span>
-            </h2>
+            {/* Image Column */}
+            <div className="relative">
+              {/* Soft glow behind the products */}
+              <div className="absolute inset-x-[8%] inset-y-[10%] rounded-full bg-white/80 blur-2xl" />
 
-            {/* RESPONSIVE MOBILE IMAGE: Clearly visible on mobile */}
-            <div className="block md:hidden relative w-full aspect-[16/10] sm:aspect-[2/1] rounded-2xl overflow-hidden shadow-md border border-slate-200/90 my-5 bg-slate-50">
-              <Image
-                src="/categories/mix-product.png"
-                alt="Fresh Food Products and Groceries Assortment"
-                fill
-                priority
-                className="object-cover object-[75%_center]"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
+              <div className="relative w-full aspect-[1682/935]">
+                <Image
+                  src={content.image || "/categories/mix-product-new.png"}
+                  alt={`${content.titleHighlight} ${content.titleLine1} ${content.titleLine2}`}
+                  fill
+                  className="object-contain drop-shadow-xl"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
 
-            {/* Subtitle */}
-            <p className="text-base sm:text-lg text-slate-700 font-normal leading-relaxed max-w-xl">
-              From daily essentials to bulk supply, we provide high-quality food products with reliable delivery across Saudi Arabia.
-            </p>
-
-            {/* Red pill button */}
-            <div className="pt-2">
-              <Link
-                href="/products"
-                className="w-full sm:w-auto bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3.5 sm:py-4 rounded-full text-base font-bold tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 group cursor-pointer inline-flex"
-              >
-                <span>Shop Now</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {/* Floating delivery card */}
+              <div className="absolute -bottom-2 left-0 sm:bottom-2 sm:left-2 flex items-center gap-2.5 bg-white rounded-2xl border border-slate-100 shadow-lg px-3 py-2.5 sm:px-4 sm:py-3">
+                <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-red text-white flex items-center justify-center shrink-0">
+                  <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+                </span>
+                <div className="leading-tight">
+                  <p className="text-xs sm:text-sm font-black text-slate-900">{content.badgeTitle}</p>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">{content.badgeSubtitle}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -7,10 +7,12 @@ import {
   Upload,
   Trash2,
   X,
-  Image as ImageIcon,
   Plus,
   AlertCircle,
+  Pencil,
+  Home,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface GalleryItem {
   id: string;
@@ -18,6 +20,7 @@ interface GalleryItem {
   image: string;
   caption: string;
   location: string;
+  show_on_homepage?: boolean;
   created_at?: string;
 }
 
@@ -25,6 +28,7 @@ export default function AdminMediaPage() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   // Upload form state
@@ -81,13 +85,24 @@ export default function AdminMediaPage() {
 
   const closeModal = () => {
     setShowModal(false);
+    setEditingItem(null);
     resetForm();
+  };
+
+  const openEditModal = (item: GalleryItem) => {
+    resetForm();
+    setEditingItem(item);
+    setFormTitle(item.title);
+    setFormCaption(item.caption || "");
+    setFormLocation(item.location || "");
+    setFormPreview(item.image);
+    setShowModal(true);
   };
 
   // Upload and save gallery image
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formFile) {
+    if (!formFile && !(editingItem && formPreview)) {
       setFormError("Please select an image file.");
       return;
     }
@@ -100,30 +115,34 @@ export default function AdminMediaPage() {
     setFormError(null);
 
     try {
-      // Step 1: Upload to ImageKit
-      const data = new FormData();
-      data.append("file", formFile);
-      data.append("fileName", formTitle.trim().replace(/\s+/g, "-").toLowerCase());
-      data.append("folder", "/afs-gallery");
+      // Step 1: Upload to ImageKit (only when a new file was picked)
+      let imageUrl = editingItem?.image ?? "";
+      if (formFile) {
+        const data = new FormData();
+        data.append("file", formFile);
+        data.append("fileName", formTitle.trim().replace(/\s+/g, "-").toLowerCase());
+        data.append("folder", "/afs-gallery");
 
-      const uploadRes = await fetch("/api/imagekit/upload", {
-        method: "POST",
-        body: data,
-      });
+        const uploadRes = await fetch("/api/imagekit/upload", {
+          method: "POST",
+          body: data,
+        });
 
-      if (!uploadRes.ok) {
-        setFormError("Image upload failed. Please try again.");
-        return;
+        if (!uploadRes.ok) {
+          setFormError("Image upload failed. Please try again.");
+          return;
+        }
+
+        const uploadResult = await uploadRes.json();
+        imageUrl = uploadResult.url;
       }
-
-      const uploadResult = await uploadRes.json();
-      const imageUrl: string = uploadResult.url;
 
       // Step 2: Save to Supabase gallery_items
       const saveRes = await fetch("/api/gallery", {
-        method: "POST",
+        method: editingItem ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(editingItem ? { id: editingItem.id } : {}),
           title: formTitle.trim(),
           image: imageUrl,
           caption: formCaption.trim(),
@@ -132,7 +151,11 @@ export default function AdminMediaPage() {
       });
 
       if (!saveRes.ok) {
-        setFormError("Failed to save gallery entry. Please try again.");
+        setFormError(
+          editingItem
+            ? "Failed to update gallery entry. Please try again."
+            : "Failed to save gallery entry. Please try again."
+        );
         return;
       }
 
@@ -148,6 +171,29 @@ export default function AdminMediaPage() {
   };
 
   // Delete gallery item
+  // Show / hide a photo in the homepage gallery section
+  const [togglingHome, setTogglingHome] = useState<string | null>(null);
+  const handleToggleHomepage = async (item: GalleryItem) => {
+    const next = item.show_on_homepage === false;
+    setTogglingHome(item.id);
+    try {
+      const res = await fetch("/api/gallery", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, show_on_homepage: next }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, show_on_homepage: next } : i)));
+      toast.success(next ? "Now shown on the home page" : "Hidden from the home page", { description: item.title });
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not update the home page setting. Please try again.");
+    } finally {
+      setTogglingHome(null);
+    }
+  };
+  const homeCount = items.filter((i) => i.show_on_homepage !== false).length;
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this gallery image? This cannot be undone.")) return;
     setDeleting(id);
@@ -177,41 +223,26 @@ export default function AdminMediaPage() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
             Upload and manage gallery images shown on the public gallery page.
+            {!loading && (
+              <span className="text-slate-400">
+                {" "}· {items.length} image{items.length !== 1 ? "s" : ""} · {homeCount} on home page
+              </span>
+            )}
           </p>
         </div>
 
         {/* Upload Button */}
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            resetForm();
+            setEditingItem(null);
+            setShowModal(true);
+          }}
           className="inline-flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white font-bold px-5 py-3 rounded-xl text-xs sm:text-sm shadow-md shadow-brand-red/25 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Upload Gallery Image</span>
         </button>
-      </div>
-
-      {/* CDN Info Banner */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-red-50 rounded-xl border border-red-100 text-brand-red">
-            <ImageIcon className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <span>ImageKit CDN Host</span>
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                ACTIVE
-              </span>
-            </div>
-            <code className="text-xs text-slate-900 font-mono font-bold mt-0.5 block">
-              https://ik.imagekit.io/wg5w5t4nz
-            </code>
-          </div>
-        </div>
-        <div className="text-xs text-slate-600 text-right font-medium">
-          <span className="font-bold text-slate-900">{items.length} image{items.length !== 1 ? "s" : ""} in gallery</span>
-          <p className="text-[11px] text-slate-500 mt-0.5">Saved to Supabase · Served via CDN</p>
-        </div>
       </div>
 
       {/* Gallery Grid */}
@@ -243,6 +274,14 @@ export default function AdminMediaPage() {
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
+                <span
+                  className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${
+                    item.show_on_homepage !== false ? "bg-emerald-500 text-white" : "bg-white/90 text-slate-500"
+                  }`}
+                >
+                  <Home className="w-3 h-3" />
+                  {item.show_on_homepage !== false ? "On Home Page" : "Not on Home"}
+                </span>
               </div>
 
               {/* Info */}
@@ -255,7 +294,36 @@ export default function AdminMediaPage() {
               </div>
 
               {/* Actions */}
-              <div className="px-4 pb-4 flex items-center justify-end gap-2">
+              <div className="px-4 pb-4 flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={item.show_on_homepage !== false}
+                  onClick={() => handleToggleHomepage(item)}
+                  disabled={togglingHome === item.id}
+                  className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer disabled:opacity-50"
+                >
+                  <span
+                    className={`relative w-9 h-5 rounded-full transition-colors ${
+                      item.show_on_homepage !== false ? "bg-emerald-500" : "bg-slate-300"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                        item.show_on_homepage !== false ? "translate-x-4" : ""
+                      }`}
+                    />
+                  </span>
+                  Home Page
+                </button>
+                <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openEditModal(item)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit
+                </button>
                 <button
                   onClick={() => handleDelete(item.id)}
                   disabled={deleting === item.id}
@@ -264,6 +332,7 @@ export default function AdminMediaPage() {
                   <Trash2 className="w-3.5 h-3.5" />
                   {deleting === item.id ? "Deleting…" : "Delete"}
                 </button>
+                </div>
               </div>
             </div>
           ))}
@@ -283,8 +352,14 @@ export default function AdminMediaPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <div>
-                <h2 className="text-lg font-black text-slate-900">Upload Gallery Image</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Image will appear on the public gallery page.</p>
+                <h2 className="text-lg font-black text-slate-900">
+                  {editingItem ? "Edit Gallery Image" : "Upload Gallery Image"}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editingItem
+                    ? "Update the details or replace the image."
+                    : "Image will appear on the public gallery page."}
+                </p>
               </div>
               <button
                 onClick={closeModal}
@@ -315,6 +390,11 @@ export default function AdminMediaPage() {
                     >
                       <X className="w-4 h-4" />
                     </button>
+                    <label className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer transition-colors">
+                      <Upload className="w-3.5 h-3.5" />
+                      Change Image
+                      <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                    </label>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 hover:border-brand-red rounded-xl p-8 cursor-pointer transition-colors bg-slate-50 hover:bg-red-50/30">
@@ -399,7 +479,12 @@ export default function AdminMediaPage() {
                   {uploading ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      Uploading…
+                      {editingItem ? "Saving…" : "Uploading…"}
+                    </>
+                  ) : editingItem ? (
+                    <>
+                      <Pencil className="w-4 h-4" />
+                      Save Changes
                     </>
                   ) : (
                     <>
