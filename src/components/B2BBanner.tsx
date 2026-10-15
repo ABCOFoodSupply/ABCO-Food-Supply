@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Truck, FileText } from "lucide-react";
+import { ArrowRight, Sparkles, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useSection } from "./SiteSectionsProvider";
 import { getIcon } from "@/lib/iconRegistry";
@@ -117,17 +117,6 @@ export const B2BBanner: React.FC<B2BBannerProps> = ({ onShopNow }) => {
                   className="object-contain drop-shadow-xl"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
-              </div>
-
-              {/* Floating delivery card */}
-              <div className="absolute -bottom-2 left-0 sm:bottom-2 sm:left-2 flex items-center gap-2.5 bg-white rounded-2xl border border-slate-100 shadow-lg px-3 py-2.5 sm:px-4 sm:py-3">
-                <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-red text-white flex items-center justify-center shrink-0">
-                  <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
-                </span>
-                <div className="leading-tight">
-                  <p className="text-xs sm:text-sm font-black text-slate-900">{content.badgeTitle}</p>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">{content.badgeSubtitle}</p>
-                </div>
               </div>
             </div>
           </div>

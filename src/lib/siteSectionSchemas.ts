@@ -123,8 +123,6 @@ export const SECTION_SCHEMAS: Record<SectionId, SectionSchema> = {
       { type: "text", key: "primaryText", label: "Red Button Text" },
       { type: "text", key: "primaryLink", label: "Red Button Link", placeholder: "/products" },
       { type: "text", key: "secondaryText", label: "White Button Text", help: "Opens the enquiry form." },
-      { type: "text", key: "badgeTitle", label: "Floating Card – Title" },
-      { type: "text", key: "badgeSubtitle", label: "Floating Card – Subtitle" },
     ],
   },
   services: {
@@ -204,8 +202,10 @@ export const SECTION_SCHEMAS: Record<SectionId, SectionSchema> = {
     description: "Used everywhere on the website: header, footer, contact page, product WhatsApp buttons and the map.",
     fields: [
       { type: "text", key: "phone", label: "Phone Number", placeholder: "+966 5X XXX XXXX", help: "Shown on the site and used for Call buttons." },
+      { type: "text", key: "phone2", label: "Second Phone Number", placeholder: "+966 5X XXX XXXX", help: "Optional. Shown on the Contact page under Headquarters & Depot." },
       { type: "text", key: "whatsapp", label: "WhatsApp Number", placeholder: "9665XXXXXXXX", help: "With country code, digits only. Used by every WhatsApp button." },
       { type: "text", key: "email", label: "Email" },
+      { type: "text", key: "email2", label: "Second Email (Business Development)", help: "Optional. Shown on the Contact page under Headquarters & Depot." },
       { type: "text", key: "address", label: "Address (shown on the site)" },
       {
         type: "text",

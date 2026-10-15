@@ -15,8 +15,8 @@ export default function AdminSettingsPage() {
     companyName: "ABCO Food Supply (AFS)",
     crNumber: "2050123456",
     sfdaNumber: "SFDA-FS-2026-9918",
-    email: "abcofoodsupply@gmail.com",
-    phone: "+966 50 123 4567",
+    email: "info@acbofoodsupply.com / bdm@abcofoodsupply.com",
+    phone: "+966 50 699 2667 / +966 57 299 5987",
     address: "Jubail Industrial City, Support Services Area 1, Eastern Province, KSA",
     coldCapacity: "18,500 m³ (-18°C to +4°C)",
     fleetCount: "45 GPS Temperature-Monitored Reefer Units",
@@ -34,8 +34,8 @@ export default function AdminSettingsPage() {
               companyName: json.data.company_name || json.data.companyName || "ABCO Food Supply (AFS)",
               crNumber: json.data.cr_number || json.data.crNumber || "2050123456",
               sfdaNumber: json.data.sfda_number || json.data.sfdaNumber || "SFDA-FS-2026-9918",
-              email: json.data.email || "abcofoodsupply@gmail.com",
-              phone: json.data.phone || "+966 50 123 4567",
+              email: json.data.email || "info@acbofoodsupply.com / bdm@abcofoodsupply.com",
+              phone: json.data.phone || "+966 50 699 2667 / +966 57 299 5987",
               address: json.data.address || "Jubail Industrial City, Support Services Area 1, Eastern Province, KSA",
               coldCapacity: json.data.cold_capacity || json.data.coldCapacity || "18,500 m³ (-18°C to +4°C)",
               fleetCount: json.data.fleet_count || json.data.fleetCount || "45 GPS Temperature-Monitored Reefer Units",
@@ -133,10 +133,10 @@ export default function AdminSettingsPage() {
 
             <div>
               <label className="block text-slate-700 font-bold mb-1.5 text-xs uppercase tracking-wider">
-                Central Inquiries Email
+                Central Inquiries Emails
               </label>
               <input
-                type="email"
+                type="text"
                 value={companySettings.email}
                 onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-brand-red"

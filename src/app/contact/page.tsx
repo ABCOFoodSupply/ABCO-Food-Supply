@@ -436,6 +436,13 @@ export default function ContactPage() {
                           {contact.phone}
                         </a>
                       </p>
+                      {contact.phone2 && (
+                        <p className="text-slate-600">
+                          <a href={`tel:+${phoneDigits(contact.phone2)}`} className="hover:text-brand-red hover:underline">
+                            {contact.phone2}
+                          </a>
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -448,9 +455,11 @@ export default function ContactPage() {
                       <p className="text-slate-600">
                         Sales: <a href={`mailto:${contact.email}`} className="text-brand-red hover:underline">{contact.email}</a>
                       </p>
-                      <p className="text-slate-600">
-                        Procurement: <a href={`mailto:${contact.email}`} className="text-brand-red hover:underline">{contact.email}</a>
-                      </p>
+                      {contact.email2 && (
+                        <p className="text-slate-600">
+                          Business Development: <a href={`mailto:${contact.email2}`} className="text-brand-red hover:underline">{contact.email2}</a>
+                        </p>
+                      )}
                     </div>
                   </div>
 

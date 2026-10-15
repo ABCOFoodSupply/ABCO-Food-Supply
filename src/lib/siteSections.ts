@@ -48,8 +48,6 @@ export interface SiteSections {
     primaryText: string;
     primaryLink: string;
     secondaryText: string;
-    badgeTitle: string;
-    badgeSubtitle: string;
   };
   // Home page Services header; the cards come from servicesList (items with showOnHome)
   services: { eyebrow: string; title: string; subtitle: string; buttonText: string };
@@ -71,8 +69,10 @@ export interface SiteSections {
   // Site-wide contact details (Admin → Contact & Social); used by every page
   contact: {
     phone: string;
+    phone2: string;
     whatsapp: string;
     email: string;
+    email2: string;
     address: string;
     mapAddress: string;
     hours: string;
@@ -241,13 +241,11 @@ export const SECTION_DEFAULTS: SiteSections = {
     highlights: [
       { icon: "Boxes", label: "Bulk Supply" },
       { icon: "Tag", label: "Best Prices" },
-      { icon: "ShieldCheck", label: "Quality Assured" },
+      { icon: "ShieldCheck", label: "Reliable Delivery" },
     ],
     primaryText: "Shop Now",
     primaryLink: "/products",
     secondaryText: "Request Bulk Quote",
-    badgeTitle: "Reliable Delivery",
-    badgeSubtitle: "Across Saudi Arabia",
   },
   services: {
     eyebrow: "OUR SERVICES",
@@ -276,14 +274,14 @@ export const SECTION_DEFAULTS: SiteSections = {
       tag: "PURPOSE & COMMITMENT",
       title: "Our Mission",
       text:
-        "To deliver premium food products and reliable supply solutions through trusted sourcing, efficient procurement, dependable cold-chain operations, and responsive customer service tailored to the Saudi food economy.",
+        "To deliver quality food products and reliable supply solutions through trusted sourcing, efficient procurement, dependable operations, and responsive customer service.",
       footer: "SFDA & HACCP Quality Compliant",
     },
     vision: {
       tag: "KINGDOM VISION 2030",
       title: "Our Vision",
       text:
-        "To become the most trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC, strengthening national food security through modern logistics and strategic supplier partnerships.",
+        "To become a trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC.",
       footer: "Aligned with Saudi Vision 2030",
     },
     valuesTag: "FOUNDATIONAL PILLARS",
@@ -295,6 +293,7 @@ export const SECTION_DEFAULTS: SiteSections = {
       { label: "Customer Focus", desc: "Customized client specifications" },
       { label: "Partnership", desc: "Long-term win-win collaboration" },
       { label: "Continuous Improvement", desc: "Constant technological innovation" },
+      { label: "Customer Focus", desc: "Constant technological advancement and innovation" },
     ],
     valuesFooter: "Commitment to Client Success",
   },
@@ -312,12 +311,14 @@ export const SECTION_DEFAULTS: SiteSections = {
     buttonText: "View Full Gallery",
   },
   contact: {
-    phone: "+966 57 299 5987",
+    phone: "+966 50 699 2667",
+    phone2: "+966 57 299 5987",
     whatsapp: "966572995987",
-    email: "abcofoodsupply@gmail.com",
+    email: "info@abcofoodsupply.com",
+    email2: "bdm@abcofoodsupply.com",
     address: "Jubail Industrial City, KSA",
     mapAddress: "Jubail Industrial City, Saudi Arabia",
-    hours: "Sun – Thu  8:00 AM – 6:00 PM",
+    hours: "Sun – Thu & Sat : 8:00 AM – 8:00 PM",
     hoursNote: "Arabia Standard Time (GMT+3)",
   },
   social: {
