@@ -281,7 +281,7 @@ export const SECTION_DEFAULTS: SiteSections = {
       tag: "KINGDOM VISION 2030",
       title: "Our Vision",
       text:
-        "To become a trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC.",
+        "To become the most trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC.",
       footer: "Aligned with Saudi Vision 2030",
     },
     valuesTag: "FOUNDATIONAL PILLARS",
@@ -425,13 +425,13 @@ export const SECTION_DEFAULTS: SiteSections = {
     mission: {
       title: "Our Mission",
       text:
-        "To deliver premium food products and reliable supply solutions through trusted global sourcing, efficient procurement, dependable cold-chain operations, and responsive customer service tailored to the Saudi food economy.",
+        "To deliver quality food products and reliable supply solutions through trusted sourcing, efficient procurement, dependable operations, and responsive customer service.",
       footer: "Quality Delivered With Consistency",
     },
     vision: {
       title: "Our Vision",
       text:
-        "To become the most dependable and preferred food distribution partner in Saudi Arabia, recognized for quality excellence, seamless supply chains, and enduring commercial partnerships.",
+        "To become the most trusted and recognized food trading and supply partner across Saudi Arabia and the wider GCC.",
       footer: "Supporting Saudi Vision 2030",
     },
     valuesTitle: "Core Values",

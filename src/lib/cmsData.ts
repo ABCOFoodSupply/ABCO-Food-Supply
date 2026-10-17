@@ -35,6 +35,7 @@ export interface ClientPartnerItem {
   image: string;
   type?: string;
   location?: string;
+  category?: "client" | "partner"; // "client" = Our Clients, "partner" = Our Partners
 }
 
 export interface HomePageCmsData {

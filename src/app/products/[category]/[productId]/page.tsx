@@ -250,17 +250,7 @@ export default function ProductDetailPage() {
                   <Package className="w-24 h-24 text-slate-300" />
                 )}
 
-                {/* Storage Badge */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-full text-xs font-bold text-brand-red border border-slate-200 shadow-2xs flex items-center gap-1.5">
-                  <ThermometerSnowflake className="w-3.5 h-3.5" />
-                  <span>{product.storage_type}</span>
-                </div>
 
-                {/* Origin Badge */}
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 border border-slate-200 shadow-2xs flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{product.origin}</span>
-                </div>
               </div>
 
               <button
@@ -275,18 +265,6 @@ export default function ProductDetailPage() {
             {/* Right: Info */}
             <div className="lg:col-span-7 space-y-6">
               <div className="space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={`/products?category=${product.category_slug}`}
-                    className="bg-red-50 text-brand-red text-xs font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full hover:bg-red-100 transition-colors"
-                  >
-                    {product.category_name}
-                  </Link>
-                  <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>{product.certification}</span>
-                  </span>
-                </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
                   {product.name}
                 </h1>
@@ -296,25 +274,6 @@ export default function ProductDetailPage() {
                 {product.description}
               </p>
 
-              {/* Key B2B Summary Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2">
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Minimum Order</span>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{product.moq}</p>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Packaging</span>
-                  <p className="text-sm font-black text-slate-900 mt-0.5 break-words">{product.packaging}</p>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Shelf Life</span>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{product.shelf_life}</p>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Storage</span>
-                  <p className="text-sm font-black text-brand-red mt-0.5 break-words">{product.storage_type}</p>
-                </div>
-              </div>
 
               {/* Actions */}
               <div className="pt-2 flex flex-wrap items-center gap-3.5">

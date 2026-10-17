@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import type { SubCategoryItem } from "@/data/subcategories";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface ProductCategory {
   id: string;
   name: string;
@@ -57,7 +57,7 @@ interface Product {
   created_at?: string;
 }
 
-// ─── Helper: slugify ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Helper: slugify â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function slugify(text: string) {
   return text
     .toLowerCase()
@@ -67,7 +67,7 @@ function slugify(text: string) {
     .trim();
 }
 
-// ─── ImageKit uploader ───────────────────────────────────────────────────────
+// â”€â”€â”€ ImageKit uploader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function uploadToImageKit(file: File, folder: string): Promise<string | null> {
   const data = new FormData();
   data.append("file", file);
@@ -79,16 +79,16 @@ async function uploadToImageKit(file: File, folder: string): Promise<string | nu
   return result.url || null;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  ADMIN PRODUCTS PAGE
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export default function AdminProductsPage() {
   const [activeTab, setActiveTab] = useState<"categories" | "products">("categories");
 
-  // ── State: Subcategories Mapping ──────────────────────────────────────────
+  // â”€â”€ State: Subcategories Mapping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, SubCategoryItem[]>>({});
 
-  // ── State: Categories ────────────────────────────────────────────────────
+  // â”€â”€ State: Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [catSearch, setCatSearch] = useState("");
   const [catLoading, setCatLoading] = useState(true);
@@ -109,7 +109,7 @@ export default function AdminProductsPage() {
   const [newSubcatDesc, setNewSubcatDesc] = useState("");
   const [newSubcatVarieties, setNewSubcatVarieties] = useState("");
 
-  // ── State: Products ──────────────────────────────────────────────────────
+  // â”€â”€ State: Products â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [products, setProducts] = useState<Product[]>([]);
   const [prodSearch, setProdSearch] = useState("");
   const [prodCatFilter, setProdCatFilter] = useState("all");
@@ -143,7 +143,7 @@ export default function AdminProductsPage() {
     specVal3: "",
   });
 
-  // ── Fetch subcategories map ──────────────────────────────────────────────
+  // â”€â”€ Fetch subcategories map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchSubcategories = useCallback(async () => {
     try {
       const res = await fetch("/api/subcategories");
@@ -156,7 +156,7 @@ export default function AdminProductsPage() {
     }
   }, []);
 
-  // ── Fetch categories ─────────────────────────────────────────────────────
+  // â”€â”€ Fetch categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchCategories = useCallback(async () => {
     setCatLoading(true);
     try {
@@ -170,7 +170,7 @@ export default function AdminProductsPage() {
     }
   }, []);
 
-  // ── Fetch products ───────────────────────────────────────────────────────
+  // â”€â”€ Fetch products â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchProducts = useCallback(async () => {
     setProdLoading(true);
     try {
@@ -190,12 +190,12 @@ export default function AdminProductsPage() {
     fetchSubcategories();
   }, [fetchCategories, fetchProducts, fetchSubcategories]);
 
-  // ── Category: auto-slug ──────────────────────────────────────────────────
+  // â”€â”€ Category: auto-slug â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCatNameChange = (name: string) => {
     setCatForm((prev) => ({ ...prev, name, slug: slugify(name) }));
   };
 
-  // ── Category: image upload ───────────────────────────────────────────────
+  // â”€â”€ Category: image upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCatImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -210,7 +210,7 @@ export default function AdminProductsPage() {
     setCatUploading(false);
   };
 
-  // ── Category: save ───────────────────────────────────────────────────────
+  // â”€â”€ Category: save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -258,7 +258,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Category Subcategory helpers ─────────────────────────────────────────
+  // â”€â”€ Category Subcategory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleAddSubcatToCat = (e?: React.MouseEvent) => {
     e?.preventDefault();
     if (!newSubcatName.trim()) {
@@ -297,7 +297,7 @@ export default function AdminProductsPage() {
     }));
   };
 
-  // ── Category: toggle homepage ─────────────────────────────────────────────
+  // â”€â”€ Category: toggle homepage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleToggleHomepage = async (cat: ProductCategory) => {
     try {
       const res = await fetch("/api/categories", {
@@ -318,7 +318,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Category: delete ─────────────────────────────────────────────────────
+  // â”€â”€ Category: delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDeleteCategory = async (cat: ProductCategory) => {
     if (!confirm(`Delete category "${cat.name}"? This cannot be undone.`)) return;
     try {
@@ -332,7 +332,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Category: open edit ───────────────────────────────────────────────────
+  // â”€â”€ Category: open edit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const openEditCat = (cat: ProductCategory) => {
     setEditingCat(cat);
     const existingSubs = subcategoriesMap[cat.slug] || [];
@@ -350,7 +350,7 @@ export default function AdminProductsPage() {
     setIsAddCatOpen(true);
   };
 
-  // ── Product: image upload ─────────────────────────────────────────────────
+  // â”€â”€ Product: image upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleProdImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -365,7 +365,7 @@ export default function AdminProductsPage() {
     setProdUploading(false);
   };
 
-  // ── Product: open edit ───────────────────────────────────────────────────
+  // â”€â”€ Product: open edit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const openEditProd = (p: Product) => {
     setEditingProd(p);
     const specEntries = Object.entries(p.specs || {});
@@ -405,7 +405,7 @@ export default function AdminProductsPage() {
     setIsAddProdOpen(true);
   };
 
-  // ── Product: save / update ────────────────────────────────────────────────
+  // â”€â”€ Product: save / update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const cat = categories.find((c) => c.slug === prodForm.category_slug);
@@ -486,7 +486,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Product: toggle homepage featured ─────────────────────────────────────
+  // â”€â”€ Product: toggle homepage featured â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleToggleProductFeatured = async (product: Product) => {
     try {
       const nextVal = !product.featured_on_homepage;
@@ -508,7 +508,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Product: delete ───────────────────────────────────────────────────────
+  // â”€â”€ Product: delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDeleteProduct = async (product: Product) => {
     if (!confirm(`Delete "${product.name}"?`)) return;
     try {
@@ -522,7 +522,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Filtered lists ────────────────────────────────────────────────────────
+  // â”€â”€ Filtered lists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const filteredCats = categories.filter(
     (c) =>
       c.name.toLowerCase().includes(catSearch.toLowerCase()) ||
@@ -538,12 +538,12 @@ export default function AdminProductsPage() {
     return matchSearch && matchCat;
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //  RENDER
-  // ────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* ── Page Header ── */}
+      {/* â”€â”€ Page Header â”€â”€ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3">
@@ -604,7 +604,7 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* ── Tabs ── */}
+      {/* â”€â”€ Tabs â”€â”€ */}
       <div className="bg-white border border-slate-200 rounded-2xl p-2 flex items-center gap-2 shadow-2xs w-fit">
         <button
           onClick={() => setActiveTab("categories")}
@@ -639,9 +639,9 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* ════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           TAB 1: CATEGORIES
-      ════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {activeTab === "categories" && (
         <div className="space-y-5">
           {/* Search */}
@@ -768,9 +768,9 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           TAB 2: PRODUCTS
-      ════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {activeTab === "products" && (
         <div className="space-y-5">
           {/* Filters */}
@@ -875,7 +875,7 @@ export default function AdminProductsPage() {
                         </td>
                         <td className="py-4 px-4">
                           <div className="text-slate-900 font-bold text-xs">{p.packaging}</div>
-                          <div className="text-[11px] text-slate-600 font-medium mt-0.5">MOQ: {p.moq}</div>
+
                         </td>
                         <td className="py-4 px-4">
                           <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
@@ -942,9 +942,9 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           MODAL: ADD / EDIT CATEGORY
-      ════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isAddCatOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 md:p-6"
@@ -1184,9 +1184,9 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           MODAL: ADD PRODUCT
-      ════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isAddProdOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 md:p-6"
@@ -1318,7 +1318,7 @@ export default function AdminProductsPage() {
                       </select>
                       {prodForm.sub_category && (
                         <p className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
-                          ✓ Assigned to subcategory: <strong>{prodForm.sub_category}</strong>
+                          âœ“ Assigned to subcategory: <strong>{prodForm.sub_category}</strong>
                         </p>
                       )}
                     </div>
@@ -1417,59 +1417,13 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* Row 2: Origin + Storage */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-800 font-bold mb-1.5">Country of Origin</label>
-                    <select
-                      value={prodForm.origin}
-                      onChange={(e) => setProdForm({ ...prodForm, origin: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-brand-red"
-                    >
-                      <option>Saudi Arabia (Local)</option>
-                      <option>India</option>
-                      <option>Pakistan</option>
-                      <option>Brazil</option>
-                      <option>Australia</option>
-                      <option>Netherlands</option>
-                      <option>USA</option>
-                      <option>Egypt</option>
-                      <option>Europe</option>
-                      <option>Global</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-800 font-bold mb-1.5">Storage Condition</label>
-                    <select
-                      value={prodForm.storage_type}
-                      onChange={(e) => setProdForm({ ...prodForm, storage_type: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-brand-red"
-                    >
-                      <option value="Ambient">Ambient (Dry & Ventilated)</option>
-                      <option value="Chilled (+4°C)">Chilled (+4°C)</option>
-                      <option value="Frozen (-18°C)">Frozen (-18°C)</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Row 3: MOQ + Packaging */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Row 3: Packaging */}
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-slate-800 font-bold mb-1.5">MOQ (Minimum Order Qty) *</label>
+                    <label className="block text-slate-800 font-bold mb-1.5">Packaging</label>
                     <input
                       type="text"
-                      required
-                      placeholder="e.g. 500 kg (25 bags)"
-                      value={prodForm.moq}
-                      onChange={(e) => setProdForm({ ...prodForm, moq: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-brand-red"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-800 font-bold mb-1.5">Packaging *</label>
-                    <input
-                      type="text"
-                      required
                       placeholder="e.g. 20kg & 40kg Non-Woven Bags"
                       value={prodForm.packaging}
                       onChange={(e) => setProdForm({ ...prodForm, packaging: e.target.value })}
@@ -1504,11 +1458,10 @@ export default function AdminProductsPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-slate-800 font-bold mb-1.5">Product Description *</label>
+                  <label className="block text-slate-800 font-bold mb-1.5">Product Description</label>
                   <textarea
-                    required
                     rows={3}
-                    placeholder="Describe the product — quality, grade, culinary uses, sourcing..."
+                    placeholder="Describe the product â€” quality, grade, culinary uses, sourcing..."
                     value={prodForm.description}
                     onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-brand-red resize-none"

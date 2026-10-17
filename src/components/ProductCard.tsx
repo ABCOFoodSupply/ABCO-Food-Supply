@@ -57,20 +57,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         ) : (
           <Package className="w-16 h-16 text-slate-300" />
         )}
-
-        {/* Origin Tag */}
-        {product.origin && (
-          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-slate-800 border border-slate-200/80 shadow-2xs">
-            {product.origin}
-          </div>
-        )}
-
-        {/* Storage Tag */}
-        {product.storage_type && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-brand-red border border-slate-200/80 shadow-2xs">
-            {product.storage_type}
-          </div>
-        )}
       </Link>
 
       {/* Card Info */}
@@ -97,12 +83,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Specs */}
         <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
-          {product.moq && (
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-slate-400 shrink-0">MOQ:</span>
-              <span className="font-bold text-slate-800">{product.moq}</span>
-            </div>
-          )}
           {product.packaging && (
             <div className="flex items-start justify-between gap-3">
               <span className="text-slate-400 shrink-0">Packaging:</span>

@@ -71,6 +71,7 @@ export async function GET() {
           image: r.image,
           type: r.type,
           location: r.location,
+          category: r.category || "partner", // "client" or "partner"
         }));
       }
     }
@@ -193,12 +194,13 @@ export async function POST(req: NextRequest) {
 
       // Insert current active partners
       if (clientsPartners.length > 0) {
-        const partnerPayloads = clientsPartners.map((p, i) => ({
+        const partnerPayloads = clientsPartners.map((p: any, i: number) => ({
           id: p.id,
           name: p.name,
           image: p.image,
-          type: p.type || "Retail Partner",
+          type: p.type || "",
           location: p.location || "KSA",
+          category: p.category || "partner", // persist "client" or "partner"
           sort_order: i + 1,
         }));
 

@@ -35,6 +35,11 @@ export const ContactSection: React.FC = () => {
     toast.success(`Copied ${label}`, { description: text });
   };
 
+  const PHONE2 = content.phone2 || "+966 572 995 987";
+  const EMAIL2 = content.email2 || "bdm@abcofoodsupply.com";
+  const TEL2_HREF = `tel:+${phoneDigits(PHONE2)}`;
+  const EMAIL2_HREF = `mailto:${EMAIL2}`;
+
   const contactItems = [
     {
       icon: Phone,
@@ -45,12 +50,28 @@ export const ContactSection: React.FC = () => {
       copy: () => handleCopy(PHONE, "Phone Number"),
     },
     {
+      icon: Phone,
+      label: "Direct Phone 2",
+      value: PHONE2,
+      href: TEL2_HREF,
+      actionLabel: "Call now",
+      copy: () => handleCopy(PHONE2, "Phone Number"),
+    },
+    {
       icon: Mail,
       label: "Email Inquiries",
       value: EMAIL,
       href: `mailto:${EMAIL}`,
       actionLabel: "Send email",
       copy: () => handleCopy(EMAIL, "Email Address"),
+    },
+    {
+      icon: Mail,
+      label: "BDM Email",
+      value: EMAIL2,
+      href: EMAIL2_HREF,
+      actionLabel: "Send email",
+      copy: () => handleCopy(EMAIL2, "BDM Email"),
     },
     {
       icon: MapPin,

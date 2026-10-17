@@ -61,6 +61,23 @@ async function saveSiteSections(data: SiteSections) {
   window.dispatchEvent(new CustomEvent(SITE_SECTIONS_EVENT, { detail: data }));
 }
 
+// ── Partner / Client form state ─────────────────────────────────────────────
+interface PartnerFormState {
+  id: string;
+  name: string;
+  image: string;
+  type: string;
+  category: "client" | "partner";
+}
+
+const EMPTY_PARTNER_FORM: PartnerFormState = {
+  id: "",
+  name: "",
+  image: "",
+  type: "",
+  category: "partner",
+};
+
 export default function AdminHomePageCmsPage() {
   const [cmsData, setCmsData] = useState<HomePageCmsData>(getHomePageCmsData());
   const [activeTab, setActiveTab] = useState<string>("hero");
@@ -69,19 +86,23 @@ export default function AdminHomePageCmsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTarget, setUploadTarget] = useState<string | null>(null);
 
-  // Modal states
+  // Category modal
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatSlug, setNewCatSlug] = useState("");
   const [newCatImage, setNewCatImage] = useState("/categories/rice-and-grains.png");
 
+  // Partner / Client inline manager
+  const [partnerForm, setPartnerForm] = useState<PartnerFormState>(EMPTY_PARTNER_FORM);
+  const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [isSavingPartner, setIsSavingPartner] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Load from Supabase DB on mount
   useEffect(() => {
     fetchHomePageCmsFromDb().then((data) => {
-      if (data) {
-        setCmsData(data);
-      }
+      if (data) setCmsData(data);
     });
     fetch("/api/sections", { cache: "no-store" })
       .then((res) => res.json())
@@ -101,6 +122,98 @@ export default function AdminHomePageCmsPage() {
         onChange={(v) => setSections((prev) => ({ ...prev, [id]: v }))}
       />
     );
+  };
+
+  // ── Partner helpers ────────────────────────────────────────────────────────
+  const openAddPartner = () => {
+    setPartnerForm(EMPTY_PARTNER_FORM);
+    setEditingPartnerId(null);
+    setIsPartnerModalOpen(true);
+  };
+
+  const openEditPartner = (p: ClientPartnerItem) => {
+    setPartnerForm({
+      id: p.id,
+      name: p.name,
+      image: p.image,
+      type: p.type || "",
+      category: (p as any).category || "partner",
+    });
+    setEditingPartnerId(p.id);
+    setIsPartnerModalOpen(true);
+  };
+
+  const closePartnerModal = () => {
+    setIsPartnerModalOpen(false);
+    setEditingPartnerId(null);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingLogo(true);
+    try {
+      const url = await handleImageKitUpload(file, "/afs-cms/partners");
+      setPartnerForm((prev) => ({ ...prev, image: url }));
+      toast.success("Logo uploaded!");
+    } catch {
+      toast.error("Logo upload failed.");
+    } finally {
+      setIsUploadingLogo(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleSavePartner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingPartner(true);
+    try {
+      const newItem: ClientPartnerItem & { category: string } = {
+        id: editingPartnerId || `cp-${Date.now()}`,
+        name: partnerForm.name.trim(),
+        image: partnerForm.image.trim(),
+        type: partnerForm.type.trim(),
+        category: partnerForm.category,
+      };
+
+      const updated: ClientPartnerItem[] = editingPartnerId
+        ? cmsData.clientsPartners.map((p) => (p.id === editingPartnerId ? (newItem as any) : p))
+        : [...cmsData.clientsPartners, newItem as any];
+
+      const newCmsData = { ...cmsData, clientsPartners: updated };
+      setCmsData(newCmsData);
+
+      // Persist to DB
+      const res = await fetch("/api/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hero: {}, quickCategories: [], clientsPartners: updated }),
+      });
+      if (!res.ok) throw new Error("DB save failed");
+
+      toast.success(editingPartnerId ? `"${newItem.name}" updated!` : `"${newItem.name}" added!`);
+      closePartnerModal();
+    } catch (err) {
+      toast.error("Could not save. Please try again.");
+    } finally {
+      setIsSavingPartner(false);
+    }
+  };
+
+  const handleDeletePartner = async (id: string, name: string) => {
+    if (!confirm(`Remove "${name}"?`)) return;
+    const updated = cmsData.clientsPartners.filter((p) => p.id !== id);
+    setCmsData({ ...cmsData, clientsPartners: updated });
+    try {
+      await fetch("/api/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hero: {}, quickCategories: [], clientsPartners: updated }),
+      });
+      toast.success(`"${name}" removed.`);
+    } catch {
+      toast.error("Failed to delete.");
+    }
   };
 
   // Generic ImageKit uploader for CMS assets
@@ -373,7 +486,7 @@ export default function AdminHomePageCmsPage() {
             }`}
           >
             <span className={activeTab === tab.id ? "text-white/70" : "text-slate-400"}>{i + 1}.</span>
-            <span>
+            <span suppressHydrationWarning>
               {tab.label}
               {tab.id === "partners" ? ` (${cmsData.clientsPartners.length})` : ""}
             </span>
@@ -687,45 +800,228 @@ export default function AdminHomePageCmsPage() {
 
 
 
-      {/* TAB 3: OUR CLIENTS & PARTNERS */}
-      {activeTab === "partners" && (
-        <div className="space-y-6">
-          {renderSection("partners")}
+      {/* TAB: CLIENTS & PARTNERS MANAGER */}
+      {activeTab === "partners" && (() => {
+        const clients = cmsData.clientsPartners.filter((p) => (p as any).category === "client");
+        const partners = cmsData.clientsPartners.filter((p) => !((p as any).category) || (p as any).category === "partner");
 
-          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-brand-red shrink-0" />
-                  <span>Partner Names &amp; Logos</span>
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                  Managed in one place: <strong className="text-slate-700">Admin → Clients &amp; Partners</strong>. Changes there show on the homepage right away.
-                </p>
-              </div>
-              <Link
-                href="/admin/partners"
-                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md shadow-brand-red/25 transition-all"
+        const LogoCard = ({ item }: { item: ClientPartnerItem }) => (
+          <div className="group bg-white border border-slate-200 hover:border-brand-red/40 rounded-2xl p-4 flex flex-col items-center gap-3 shadow-xs hover:shadow-md transition-all relative">
+            <div className="relative w-24 h-16 bg-slate-50 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center">
+              <Image src={item.image} alt={item.name} fill className="object-contain p-1" sizes="96px" />
+            </div>
+            <p className="text-xs font-bold text-slate-800 text-center leading-tight line-clamp-2">{item.name}</p>
+            {(item as any).type && (
+              <p className="text-[11px] text-slate-500 text-center">{(item as any).type}</p>
+            )}
+            <div className="flex items-center gap-1.5 mt-auto">
+              <button
+                onClick={() => openEditPartner(item)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-brand-red hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors cursor-pointer"
               >
-                <span>Manage Partners</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                <Pencil className="w-3 h-3" /> Edit
+              </button>
+              <button
+                onClick={() => handleDeletePartner(item.id, item.name)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        );
+
+        return (
+          <div className="space-y-6">
+            {renderSection("partners")}
+
+            {/* Header */}
+            <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-brand-red shrink-0" />
+                    <span>Our Clients &amp; Partners</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                    Add logos here — choose <strong className="text-blue-700">Client</strong> or <strong className="text-brand-red">Partner</strong>. Each group appears as its own section on the homepage.
+                  </p>
+                </div>
+                <button
+                  onClick={openAddPartner}
+                  className="shrink-0 inline-flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md shadow-brand-red/25 transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Client / Partner
+                </button>
+              </div>
+
+              {/* OUR CLIENTS */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+                    <Users className="w-3 h-3" /> Our Clients
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">{clients.length} logo{clients.length !== 1 ? "s" : ""}</span>
+                </div>
+                {clients.length === 0 ? (
+                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
+                    <p className="text-sm text-slate-400 font-medium">No clients added yet.</p>
+                    <button onClick={openAddPartner} className="mt-2 text-xs text-brand-red font-bold hover:underline cursor-pointer">
+                      + Add first client
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+                    {clients.map((item) => <LogoCard key={item.id} item={item} />)}
+                  </div>
+                )}
+              </div>
+
+              {/* OUR PARTNERS */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 bg-red-50 text-brand-red border border-red-200 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+                    <Users className="w-3 h-3" /> Our Partners
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">{partners.length} logo{partners.length !== 1 ? "s" : ""}</span>
+                </div>
+                {partners.length === 0 ? (
+                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
+                    <p className="text-sm text-slate-400 font-medium">No partners added yet.</p>
+                    <button onClick={openAddPartner} className="mt-2 text-xs text-brand-red font-bold hover:underline cursor-pointer">
+                      + Add first partner
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+                    {partners.map((item) => <LogoCard key={item.id} item={item} />)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* MODAL: ADD / EDIT CLIENT OR PARTNER */}
+      {isPartnerModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-3 sm:p-4"
+          onClick={closePartnerModal}
+        >
+          <div
+            className="bg-white border border-slate-200 rounded-3xl max-w-md w-full max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:p-7 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">
+                  {editingPartnerId ? "Edit Logo" : "Add Client or Partner"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">Choose category then upload the brand logo.</p>
+              </div>
+              <button onClick={closePartnerModal} className="p-1.5 rounded-xl text-slate-400 hover:text-black hover:bg-slate-100 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Read-only preview of what the homepage shows */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {cmsData.clientsPartners.map((partner) => (
-                <div key={partner.id} className="bg-white border border-slate-200 rounded-xl p-2 text-center min-w-0">
-                  <div className="relative aspect-square w-full">
-                    <Image src={partner.image} alt={partner.name} fill className="object-contain" sizes="120px" />
-                  </div>
-                  <p className="text-[11px] font-bold text-slate-700 mt-1.5 leading-tight">{partner.name}</p>
+            <form onSubmit={handleSavePartner} className="space-y-4 text-xs sm:text-sm">
+              {/* Category selector */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-2">Category</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["client", "partner"] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setPartnerForm((p) => ({ ...p, category: cat }))}
+                      className={`py-3 rounded-xl border-2 font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                        partnerForm.category === cat
+                          ? cat === "client"
+                            ? "bg-blue-50 border-blue-500 text-blue-700"
+                            : "bg-red-50 border-brand-red text-brand-red"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                      }`}
+                    >
+                      {cat === "client" ? "Our Client" : "Our Partner"}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5">Brand / Company Name</label>
+                <input
+                  type="text"
+                  value={partnerForm.name}
+                  onChange={(e) => setPartnerForm((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g. Almarai, India Gate"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-brand-red"
+                />
+              </div>
+
+              {/* Type */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5">Type / Category Label <span className="text-slate-400 font-medium">(optional)</span></label>
+                <input
+                  type="text"
+                  value={partnerForm.type}
+                  onChange={(e) => setPartnerForm((p) => ({ ...p, type: e.target.value }))}
+                  placeholder="e.g. Dairy Brand, Hypermarket Chain"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-brand-red"
+                />
+              </div>
+
+              {/* Logo upload */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-2">Logo Image</label>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-20 h-16 rounded-xl border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center">
+                    {partnerForm.image ? (
+                      <Image src={partnerForm.image} alt="Preview" fill className="object-contain p-1" sizes="80px" />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 text-center">No logo</span>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <label className="inline-flex items-center gap-2 bg-brand-red hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer shadow-xs transition-colors w-full justify-center">
+                      <Upload className="w-3.5 h-3.5" />
+                      {isUploadingLogo ? "Uploading..." : "Upload Logo"}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={isUploadingLogo} />
+                    </label>
+                    <input
+                      type="text"
+                      value={partnerForm.image}
+                      onChange={(e) => setPartnerForm((p) => ({ ...p, image: e.target.value }))}
+                      placeholder="Or paste image URL"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-red"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onClick={closePartnerModal} className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingPartner || isUploadingLogo}
+                  className="bg-brand-red hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer disabled:opacity-60 shadow-md shadow-brand-red/25 transition-all"
+                >
+                  {isSavingPartner && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                  {editingPartnerId ? "Save Changes" : "Add to Homepage"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
 
       {/* MODAL: ADD MORE CATEGORIES (With ImageKit upload) */}
       {isAddCategoryOpen && (
@@ -760,7 +1056,6 @@ export default function AdminHomePageCmsPage() {
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Frozen Foods or Exotic Fruits"
                   value={newCatName}
                   onChange={(e) => {
@@ -779,7 +1074,6 @@ export default function AdminHomePageCmsPage() {
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. frozen-foods"
                   value={newCatSlug}
                   onChange={(e) => setNewCatSlug(e.target.value)}

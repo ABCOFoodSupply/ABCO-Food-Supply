@@ -41,6 +41,7 @@ export default function AdminPartnersPage() {
   const [newImage, setNewImage] = useState("");
   const [newType, setNewType] = useState("");
   const [newLocation, setNewLocation] = useState("Kingdom of Saudi Arabia");
+  const [newCategory, setNewCategory] = useState<"client" | "partner">("partner");
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export default function AdminPartnersPage() {
     setNewImage("");
     setNewType("");
     setNewLocation("Kingdom of Saudi Arabia");
+    setNewCategory("partner");
   };
 
   const openAdd = () => {
@@ -63,6 +65,7 @@ export default function AdminPartnersPage() {
     setNewImage(partner.image || "");
     setNewType(partner.type || "");
     setNewLocation(partner.location || "");
+    setNewCategory((partner as any).category || "partner");
     setEditingId(partner.id);
     setIsAddOpen(true);
   };
@@ -134,7 +137,9 @@ export default function AdminPartnersPage() {
         image: newImage.trim(),
         type: newType.trim(),
         location: newLocation.trim(),
-      };
+        category: newCategory,
+      } as any;
+
 
       // Editing keeps the partner in its place; adding appends
       const updated = editingId
@@ -300,7 +305,16 @@ export default function AdminPartnersPage() {
                 </div>
 
                 <h3 className="text-lg font-black text-slate-900">{partner.name}</h3>
-                <p className="text-xs text-brand-red font-bold mt-0.5">{partner.type || "Retail Partner"}</p>
+                <p className="text-xs font-bold mt-0.5">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    (partner as any).category === "client"
+                      ? "bg-blue-50 text-blue-700"
+                      : "bg-red-50 text-brand-red"
+                  }`}>
+                    {(partner as any).category === "client" ? "Client" : "Partner"}
+                  </span>
+                  {partner.type ? <span className="ml-2 text-slate-500">{partner.type}</span> : null}
+                </p>
 
                 <div className="mt-4 space-y-2 text-xs">
                   <div className="flex items-start gap-2 text-slate-600 font-medium">
@@ -343,6 +357,18 @@ export default function AdminPartnersPage() {
             </div>
 
             <form onSubmit={handleAddPartner} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Category *</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as "client" | "partner")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-red bg-white"
+                >
+                  <option value="client">Our Client</option>
+                  <option value="partner">Our Partner</option>
+                </select>
+              </div>
+
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Company / Brand Name *</label>
                 <input

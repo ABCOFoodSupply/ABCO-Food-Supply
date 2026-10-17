@@ -208,7 +208,7 @@ function ProductsContent() {
           searchQuery.trim() === "" ||
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (product.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           (product.specs &&
             Object.values(product.specs).some((val) =>
               String(val).toLowerCase().includes(searchQuery.toLowerCase())
@@ -217,17 +217,20 @@ function ProductsContent() {
         const matchesCategory =
           selectedCategory === "all" || product.category_slug === selectedCategory;
 
-        // Subcategory match
+        // Subcategory match — checks specs slug, specs name, or variety name match
         let matchesSubCategory = true;
         if (selectedCategory !== "all" && selectedSubCategory !== "all") {
           const targetSub = currentSubcategories.find((s) => s.slug === selectedSubCategory);
           const subName = targetSub?.name?.toLowerCase() || selectedSubCategory.replace(/-/g, " ");
 
-          const productSubName = (product.specs?.["Sub Category"] || "").toLowerCase();
-          const productSubSlug = (product.specs?.["Sub-Category Slug"] || "").toLowerCase();
+          const productSubName = ((product.specs?.["Sub Category"]) || "").toLowerCase();
+          const productSubSlug = ((product.specs?.["Sub-Category Slug"]) || "").toLowerCase();
           const nameLower = product.name.toLowerCase();
           const descLower = (product.description || "").toLowerCase();
 
+          // Primary: direct slug/name match in specs
+          // Secondary: product name or description mentions the subcategory
+          // Tertiary: any of the subcategory's variety names appear in product name
           matchesSubCategory =
             productSubSlug === selectedSubCategory ||
             productSubName === subName ||
@@ -241,13 +244,13 @@ function ProductsContent() {
         }
 
         const matchesOrigin =
-          selectedOrigin === "all" || product.origin === selectedOrigin;
+          selectedOrigin === "all" || (product.origin || "") === selectedOrigin;
 
         const matchesStorage =
           selectedStorage === "all" ||
-          (selectedStorage === "ambient" && product.storage_type === "Ambient") ||
-          (selectedStorage === "chilled" && product.storage_type.includes("Chilled")) ||
-          (selectedStorage === "frozen" && product.storage_type.includes("Frozen"));
+          (selectedStorage === "ambient" && (product.storage_type || "") === "Ambient") ||
+          (selectedStorage === "chilled" && (product.storage_type || "").includes("Chilled")) ||
+          (selectedStorage === "frozen" && (product.storage_type || "").includes("Frozen"));
 
         return matchesSearch && matchesCategory && matchesSubCategory && matchesOrigin && matchesStorage;
       })
