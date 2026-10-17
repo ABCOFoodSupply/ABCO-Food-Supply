@@ -1,0 +1,24 @@
+{
+  "mutton": [
+    {"id":"primary-cuts-mutton","name":"Primary Cuts","slug":"primary-cuts","description":"Whole carcass and primary butchery cuts of halal mutton.","varieties":["Carcass 6 Way Cut","Shoulder","Leg","Chops","Arm","Ribs","Lamb Rack"]}
+  ],
+  "beef": [
+    {"id":"primary-cuts-beef","name":"Primary Cuts","slug":"primary-cuts","description":"Premium halal beef primary butchery cuts for bulk wholesale.","varieties":["Chuck","Ribs","Round","Shank","Steak","Tenderloin","Striploin","Brisket"]}
+  ],
+  "seafood": [
+    {"id":"fish","name":"Fish","slug":"fish","description":"Fresh and frozen fish varieties sourced globally.","varieties":["Sardines","Salmon","Tilapia","Fish Fillets"]},
+    {"id":"shellfish","name":"Shellfish","slug":"shellfish","description":"Premium shellfish including lobster, prawns and shrimp in bulk.","varieties":["Lobster","Prawns","Shrimp"]}
+  ],
+  "poultry": [
+    {"id":"whole-chicken","name":"Whole Chicken","slug":"whole-chicken","description":"Grade A whole halal chicken, fresh and frozen.","varieties":["Whole Chicken"]},
+    {"id":"chicken-cuts","name":"Chicken Cuts","slug":"chicken-cuts","description":"Premium chicken portions for foodservice and retail.","varieties":["Chicken Breast Fillets","Chicken Leg","Chicken Whole Leg (Back Attached)","Chicken Drumstick","Chicken Thigh (Bone-In)"]}
+  ],
+  "edible-oils-ingredients": [
+    {"id":"edible-oils","name":"Edible Oils","slug":"edible-oils","description":"Refined and natural edible oils for commercial food production.","varieties":["Palm Oil","Olive Oil","Cooking Oil","Refined Corn Oil","Refined Sunflower Oil"]},
+    {"id":"food-ingredients","name":"Food Ingredients","slug":"food-ingredients","description":"Dry food ingredients, spices, lentils, and baking preparations.","varieties":["Spices and Seasonings","Lentils and Pulses","Food Grains and Dry Ingredients","Baking and Food Preparation Ingredients"]}
+  ],
+  "dairy-beverages": [
+    {"id":"dairy","name":"Dairy","slug":"dairy","description":"Fresh and long-life dairy products for retail and foodservice.","varieties":["Fresh Milk","Long-Life Milk","UHT Milk","Yogurt","Drinking Yogurt","Cream","Cheese","Butter"]},
+    {"id":"beverages","name":"Beverages","slug":"beverages","description":"Juices, soft drinks, water and flavored beverages in wholesale quantities.","varieties":["Juices","Soft Drinks","Bottled Water","Flavored Beverages"]}
+  ]
+}

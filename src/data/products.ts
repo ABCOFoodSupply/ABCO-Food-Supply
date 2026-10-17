@@ -3,6 +3,8 @@ export interface ProductItem {
   name: string;
   categorySlug: string;
   categoryName: string;
+  subCategory?: string;
+  subCategorySlug?: string;
   image: string;
   origin: "Saudi Arabia (Local)" | "India" | "Pakistan" | "Brazil" | "Australia" | "Netherlands" | "USA" | "Egypt" | "Global" | "Europe";
   storageType: "Ambient" | "Chilled (+4°C)" | "Frozen (-18°C)";
@@ -24,6 +26,13 @@ export interface CategoryInfo {
   storageTemp: string;
   certifications: string[];
   keyHighlights: string[];
+  subCategories?: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    varieties?: string[];
+  }[];
 }
 
 export const CATEGORIES: CategoryInfo[] = [

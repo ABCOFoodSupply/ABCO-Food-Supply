@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
@@ -16,11 +17,16 @@ import {
   ChevronDown,
   ChevronLeft,
   Loader2,
+  Sparkles,
+  CheckCircle2,
+  Layers,
+  ArrowRight,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { EnquiryModal } from "@/components/EnquiryModal";
 import { ProductCard } from "@/components/ProductCard";
+import type { SubCategoryItem } from "@/data/subcategories";
 
 // ─── Types (DB Schema) ────────────────────────────────────────────────────────
 interface Product {
@@ -53,14 +59,17 @@ interface ProductCategory {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const subCategoryParam = searchParams.get("subCategory");
   const searchParam = searchParams.get("search") || searchParams.get("q");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, SubCategoryItem[]>>({});
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("all");
   const [selectedOrigin, setSelectedOrigin] = useState<string>("all");
   const [selectedStorage, setSelectedStorage] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recommended");
@@ -70,7 +79,7 @@ function ProductsContent() {
   const [enquirySubject, setEnquirySubject] = useState("");
 
   // Pagination
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Fetch Data ────────────────────────────────────────────────────────────
@@ -78,14 +87,20 @@ function ProductsContent() {
     async function loadData() {
       setLoading(true);
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, subRes] = await Promise.all([
           fetch("/api/products"),
           fetch("/api/categories"),
+          fetch("/api/subcategories"),
         ]);
         const prodJson = await prodRes.json();
         const catJson = await catRes.json();
+        const subJson = await subRes.json();
+
         setProducts(prodJson.data || []);
         setCategories(catJson.data || []);
+        if (subJson.success && subJson.data) {
+          setSubcategoriesMap(subJson.data);
+        }
       } catch {
         // silently fail
       } finally {
@@ -95,17 +110,30 @@ function ProductsContent() {
     loadData();
   }, []);
 
-  // ── Sync URL param → category & search filters ─────────────────────────────
+  // ── Sync URL param → category, subcategory & search filters ────────────────
   useEffect(() => {
     if (categoryParam) {
       setSelectedCategory(categoryParam);
     } else {
       setSelectedCategory("all");
     }
+
+    if (subCategoryParam) {
+      setSelectedSubCategory(subCategoryParam);
+    } else {
+      setSelectedSubCategory("all");
+    }
+
     if (searchParam) {
       setSearchQuery(searchParam);
     }
-  }, [categoryParam, searchParam]);
+  }, [categoryParam, subCategoryParam, searchParam]);
+
+  // Current category subcategories
+  const currentSubcategories = useMemo(() => {
+    if (selectedCategory === "all") return [];
+    return subcategoriesMap[selectedCategory] || [];
+  }, [selectedCategory, subcategoriesMap]);
 
   // ── Category pill strip: arrows show only when there is more to scroll ──
   const pillsRef = useRef<HTMLDivElement>(null);
@@ -126,7 +154,7 @@ function ProductsContent() {
     return () => window.removeEventListener("resize", updatePillArrows);
   }, [updatePillArrows, categories]);
 
-  // Keep the selected pill centred in the strip (horizontal only, never scrolls the page)
+  // Keep the selected pill centred in the strip
   useEffect(() => {
     const el = pillsRef.current;
     const active = el?.querySelector<HTMLElement>('[data-active="true"]');
@@ -141,11 +169,27 @@ function ProductsContent() {
 
   const handleCategorySelect = (slug: string) => {
     setSelectedCategory(slug);
+    setSelectedSubCategory("all");
     if (typeof window !== "undefined") {
       if (slug === "all") {
         window.history.pushState(null, "", "/products");
       } else {
         window.history.pushState(null, "", `/products?category=${slug}`);
+      }
+    }
+  };
+
+  const handleSubCategorySelect = (subSlug: string) => {
+    setSelectedSubCategory(subSlug);
+    if (typeof window !== "undefined") {
+      if (subSlug === "all") {
+        window.history.pushState(null, "", `/products?category=${selectedCategory}`);
+      } else {
+        window.history.pushState(
+          null,
+          "",
+          `/products?category=${selectedCategory}&subCategory=${subSlug}`
+        );
       }
     }
   };
@@ -164,10 +208,37 @@ function ProductsContent() {
           searchQuery.trim() === "" ||
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase());
+          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (product.specs &&
+            Object.values(product.specs).some((val) =>
+              String(val).toLowerCase().includes(searchQuery.toLowerCase())
+            ));
 
         const matchesCategory =
           selectedCategory === "all" || product.category_slug === selectedCategory;
+
+        // Subcategory match
+        let matchesSubCategory = true;
+        if (selectedCategory !== "all" && selectedSubCategory !== "all") {
+          const targetSub = currentSubcategories.find((s) => s.slug === selectedSubCategory);
+          const subName = targetSub?.name?.toLowerCase() || selectedSubCategory.replace(/-/g, " ");
+
+          const productSubName = (product.specs?.["Sub Category"] || "").toLowerCase();
+          const productSubSlug = (product.specs?.["Sub-Category Slug"] || "").toLowerCase();
+          const nameLower = product.name.toLowerCase();
+          const descLower = (product.description || "").toLowerCase();
+
+          matchesSubCategory =
+            productSubSlug === selectedSubCategory ||
+            productSubName === subName ||
+            nameLower.includes(subName) ||
+            descLower.includes(subName) ||
+            (targetSub?.varieties &&
+              targetSub.varieties.some((v) =>
+                nameLower.includes(v.toLowerCase().split("(")[0].trim())
+              )) ||
+            false;
+        }
 
         const matchesOrigin =
           selectedOrigin === "all" || product.origin === selectedOrigin;
@@ -178,19 +249,28 @@ function ProductsContent() {
           (selectedStorage === "chilled" && product.storage_type.includes("Chilled")) ||
           (selectedStorage === "frozen" && product.storage_type.includes("Frozen"));
 
-        return matchesSearch && matchesCategory && matchesOrigin && matchesStorage;
+        return matchesSearch && matchesCategory && matchesSubCategory && matchesOrigin && matchesStorage;
       })
       .sort((a, b) => {
         if (sortBy === "name-asc") return a.name.localeCompare(b.name);
         if (sortBy === "name-desc") return b.name.localeCompare(a.name);
         return 0;
       });
-  }, [products, searchQuery, selectedCategory, selectedOrigin, selectedStorage, sortBy]);
+  }, [
+    products,
+    searchQuery,
+    selectedCategory,
+    selectedSubCategory,
+    currentSubcategories,
+    selectedOrigin,
+    selectedStorage,
+    sortBy,
+  ]);
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedOrigin, selectedStorage, sortBy]);
+  }, [searchQuery, selectedCategory, selectedSubCategory, selectedOrigin, selectedStorage, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
   const paginatedProducts = useMemo(() => {
@@ -201,6 +281,7 @@ function ProductsContent() {
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
+    setSelectedSubCategory("all");
     setSelectedOrigin("all");
     setSelectedStorage("all");
     setSortBy("recommended");
@@ -217,9 +298,12 @@ function ProductsContent() {
 
   const activeFilterCount =
     (selectedCategory !== "all" ? 1 : 0) +
+    (selectedSubCategory !== "all" ? 1 : 0) +
     (selectedOrigin !== "all" ? 1 : 0) +
     (selectedStorage !== "all" ? 1 : 0) +
     (searchQuery.trim() !== "" ? 1 : 0);
+
+  const selectedCategoryObj = categories.find((c) => c.slug === selectedCategory);
 
   return (
     <main className="min-h-screen bg-slate-50/70 flex flex-col">
@@ -227,61 +311,103 @@ function ProductsContent() {
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-200/80 py-3 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28 text-xs sm:text-sm text-slate-500">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link href="/" className="hover:text-brand-red transition-colors font-medium">Home</Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-900 font-bold">Products Catalog</span>
+          <Link
+            href="/products"
+            onClick={() => handleCategorySelect("all")}
+            className={`transition-colors font-medium ${selectedCategory === "all" ? "text-slate-900 font-bold" : "hover:text-brand-red"}`}
+          >
+            Products Catalog
+          </Link>
+          {selectedCategory !== "all" && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <button
+                onClick={() => handleSubCategorySelect("all")}
+                className={`transition-colors font-medium ${selectedSubCategory === "all" ? "text-slate-900 font-bold" : "hover:text-brand-red text-slate-500"}`}
+              >
+                {selectedCategoryObj?.name || selectedCategory}
+              </button>
+            </>
+          )}
+          {selectedSubCategory !== "all" && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-900 font-bold">
+                {currentSubcategories.find((s) => s.slug === selectedSubCategory)?.name || selectedSubCategory}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Hero Header */}
-      <section className="bg-white border-b border-slate-200/90 py-10 sm:py-14 w-full">
+      <section className="bg-white border-b border-slate-200/90 py-8 sm:py-12 w-full">
         <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-28">
-          <div className="max-w-3xl space-y-3">
-            <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase">
+          <div className="max-w-3xl space-y-2.5">
+            <span className="text-xs sm:text-sm font-black tracking-wider text-brand-red uppercase flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-brand-red" />
               WHOLESALE B2B FOOD SUPPLY
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-              Product Catalog & Bulk Supply
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              {selectedCategory === "all"
+                ? "Product Catalog & Bulk Supply"
+                : `${selectedCategoryObj?.name || "Category"} Wholesale Supply`}
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-slate-600 font-normal leading-relaxed">
-              Browse our comprehensive portfolio of imported and locally manufactured food commodities. Filter by category, storage temperature, or origin.
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 font-normal leading-relaxed">
+              {selectedCategory === "all"
+                ? "Browse our comprehensive portfolio of imported and locally manufactured food commodities. Select a category below to explore its subcategories and specialized varieties."
+                : selectedCategoryObj?.description ||
+                  `Explore premium grades, packaging formats, and customized bulk orders for ${selectedCategoryObj?.name}.`}
             </p>
           </div>
 
           {/* Category Pills (scrollable strip with arrows) */}
           <div className="relative mt-6">
-          <div
-            ref={pillsRef}
-            onScroll={updatePillArrows}
-            className="relative flex items-center gap-2.5 overflow-x-auto hide-scrollbar py-2"
-          >
-            <button
-              data-active={selectedCategory === "all"}
-              onClick={() => handleCategorySelect("all")}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === "all"
-                  ? "bg-brand-red text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+            <div
+              ref={pillsRef}
+              onScroll={updatePillArrows}
+              className="relative flex items-center gap-2.5 overflow-x-auto hide-scrollbar py-2"
             >
-              All Categories ({products.length})
-            </button>
-            {categories.map((cat) => (
               <button
-                key={cat.slug}
-                data-active={selectedCategory === cat.slug}
-                onClick={() => handleCategorySelect(cat.slug)}
+                data-active={selectedCategory === "all"}
+                onClick={() => handleCategorySelect("all")}
                 className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat.slug
-                    ? "bg-brand-red text-white shadow-md"
+                  selectedCategory === "all"
+                    ? "bg-brand-red text-white shadow-md shadow-brand-red/25"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                {cat.name}
+                All Categories ({products.length})
               </button>
-            ))}
-          </div>
+              {categories.map((cat) => (
+                <button
+                  key={cat.slug}
+                  data-active={selectedCategory === cat.slug}
+                  onClick={() => handleCategorySelect(cat.slug)}
+                  className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
+                    selectedCategory === cat.slug
+                      ? "bg-brand-red text-white shadow-md shadow-brand-red/25"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  {subcategoriesMap[cat.slug]?.length ? (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                        selectedCategory === cat.slug
+                          ? "bg-white/25 text-white"
+                          : "bg-slate-200 text-slate-700"
+                      }`}
+                    >
+                      {subcategoriesMap[cat.slug].length} sub
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
 
             {/* Edge fades */}
             <div
@@ -319,6 +445,42 @@ function ProductsContent() {
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
+
+          {/* ── Subcategories Buttons Bar: Basmati & Non-Basmati ── */}
+          {selectedCategory !== "all" && currentSubcategories.length > 0 && (
+            <div className="mt-5 pt-5 border-t border-slate-100 flex flex-wrap items-center gap-3">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+                {selectedCategoryObj?.name} Types:
+              </span>
+              <button
+                onClick={() => handleSubCategorySelect("all")}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  selectedSubCategory === "all"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                All {selectedCategoryObj?.name}
+              </button>
+              {currentSubcategories.map((sub) => {
+                const isSelected = selectedSubCategory === sub.slug;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => handleSubCategorySelect(isSelected ? "all" : sub.slug)}
+                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                      isSelected
+                        ? "bg-brand-red text-white shadow-md shadow-brand-red/25 ring-2 ring-brand-red/20"
+                        : "bg-white border border-slate-200 text-slate-800 hover:border-brand-red/50 hover:text-brand-red shadow-2xs"
+                    }`}
+                  >
+                    <span>{sub.name}</span>
+                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -333,7 +495,7 @@ function ProductsContent() {
                   <SlidersHorizontal className="w-5 h-5 text-brand-red" />
                   <span>Filters</span>
                   {activeFilterCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-brand-red text-white text-[10px] flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-brand-red text-white text-[10px] flex items-center justify-center font-bold">
                       {activeFilterCount}
                     </span>
                   )}
@@ -377,8 +539,45 @@ function ProductsContent() {
                 </div>
               </div>
 
+              {/* Subcategory Filter (If active category has subcategories) */}
+              {selectedCategory !== "all" && currentSubcategories.length > 0 && (
+                <div className="space-y-2 pt-3 border-t border-slate-100">
+                  <label className="text-xs font-bold uppercase tracking-wider text-brand-red block">
+                    Sub-Category
+                  </label>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => handleSubCategorySelect("all")}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        selectedSubCategory === "all"
+                          ? "bg-brand-red text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      All {selectedCategoryObj?.name}
+                    </button>
+                    {currentSubcategories.map((sub) => (
+                      <button
+                        key={sub.slug}
+                        onClick={() => handleSubCategorySelect(sub.slug)}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
+                          selectedSubCategory === sub.slug
+                            ? "bg-brand-red text-white"
+                            : "text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span>{sub.name}</span>
+                        {selectedSubCategory === sub.slug && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Storage Filter */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-3 border-t border-slate-100">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">Storage Condition</label>
                 <div className="space-y-1">
                   {[
@@ -402,7 +601,7 @@ function ProductsContent() {
               </div>
 
               {/* Origin Filter */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-3 border-t border-slate-100">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">Country of Origin</label>
                 <select
                   value={selectedOrigin}
@@ -424,7 +623,7 @@ function ProductsContent() {
                   <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search products, categories, origin..."
+                    placeholder="Search products, varieties (1121, Sella, IR64...), origin..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-red font-medium"
@@ -454,7 +653,7 @@ function ProductsContent() {
                     <Filter className="w-3.5 h-3.5" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-brand-red text-white text-[9px] flex items-center justify-center">
+                      <span className="w-4 h-4 rounded-full bg-brand-red text-white text-[9px] flex items-center justify-center font-bold">
                         {activeFilterCount}
                       </span>
                     )}
@@ -465,6 +664,56 @@ function ProductsContent() {
                   </span>
                 </div>
               </div>
+
+              {/* Active Filter Pills Bar */}
+              {(selectedSubCategory !== "all" || selectedOrigin !== "all" || selectedStorage !== "all" || searchQuery) && (
+                <div className="flex items-center gap-2 flex-wrap text-xs bg-slate-100/70 p-2.5 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider">Active:</span>
+
+                  {selectedSubCategory !== "all" && (
+                    <span className="inline-flex items-center gap-1.5 bg-brand-red text-white px-3 py-1 rounded-full text-xs font-bold">
+                      Sub: {currentSubcategories.find((s) => s.slug === selectedSubCategory)?.name || selectedSubCategory}
+                      <button onClick={() => handleSubCategorySelect("all")} className="hover:opacity-80">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+
+                  {selectedOrigin !== "all" && (
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-800 px-3 py-1 rounded-full text-xs font-bold">
+                      Origin: {selectedOrigin}
+                      <button onClick={() => setSelectedOrigin("all")} className="hover:opacity-80">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+
+                  {selectedStorage !== "all" && (
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-800 px-3 py-1 rounded-full text-xs font-bold">
+                      Storage: {selectedStorage}
+                      <button onClick={() => setSelectedStorage("all")} className="hover:opacity-80">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+
+                  {searchQuery && (
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-800 px-3 py-1 rounded-full text-xs font-bold">
+                      Search: "{searchQuery}"
+                      <button onClick={() => setSearchQuery("")} className="hover:opacity-80">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+
+                  <button
+                    onClick={handleResetFilters}
+                    className="ml-auto text-xs font-bold text-brand-red hover:underline cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
 
               {/* Loading state */}
               {loading ? (
@@ -518,7 +767,6 @@ function ProductsContent() {
 
                         {Array.from({ length: totalPages }, (_, i) => i + 1)
                           .filter((page) => {
-                            // Show first, last, current, and adjacent pages
                             return (
                               page === 1 ||
                               page === totalPages ||
@@ -586,7 +834,9 @@ function ProductsContent() {
                   </div>
                   <h3 className="text-xl font-bold text-slate-900">No Products Found</h3>
                   <p className="text-sm text-slate-500 max-w-md mx-auto">
-                    No products match your selected filters. Try resetting your search.
+                    {selectedSubCategory !== "all"
+                      ? `No products found under "${currentSubcategories.find((s) => s.slug === selectedSubCategory)?.name || selectedSubCategory}". Try selecting another subcategory or resetting filters.`
+                      : "No products match your selected filters. Try resetting your search."}
                   </p>
                   <button
                     onClick={handleResetFilters}
@@ -638,8 +888,34 @@ function ProductsContent() {
                 </div>
               </div>
 
+              {/* Mobile Subcategories (if any) */}
+              {selectedCategory !== "all" && currentSubcategories.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <label className="text-xs font-bold uppercase tracking-wider text-brand-red">
+                    Sub-Categories
+                  </label>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => { handleSubCategorySelect("all"); setIsMobileFilterOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${selectedSubCategory === "all" ? "bg-brand-red text-white" : "text-slate-700 hover:bg-slate-100"}`}
+                    >
+                      All Sub-Categories
+                    </button>
+                    {currentSubcategories.map((sub) => (
+                      <button
+                        key={sub.slug}
+                        onClick={() => { handleSubCategorySelect(sub.slug); setIsMobileFilterOpen(false); }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${selectedSubCategory === sub.slug ? "bg-brand-red text-white" : "text-slate-700 hover:bg-slate-100"}`}
+                      >
+                        {sub.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Mobile Storage Filter */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-2 border-t border-slate-100">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Storage</label>
                 <div className="space-y-1">
                   {[

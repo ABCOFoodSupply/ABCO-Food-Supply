@@ -15,6 +15,8 @@ import {
   Briefcase,
   Images,
   Phone,
+  Layers,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
@@ -23,6 +25,7 @@ import { useSection } from "./SiteSectionsProvider";
 import { phoneDigits } from "@/lib/siteSections";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
+import { DEFAULT_SUBCATEGORIES, type SubCategoryItem } from "@/data/subcategories";
 
 interface HeaderProps {
   onOpenEnquiry?: () => void;
@@ -36,18 +39,18 @@ interface CategoryItem {
 }
 
 const FALLBACK_CATEGORIES: CategoryItem[] = [
-  { id: "c1", name: "Rice & Grains", slug: "rice-and-grains" },
-  { id: "c2", name: "Meat", slug: "meat" },
-  { id: "c3", name: "Seafood", slug: "seafood" },
-  { id: "c4", name: "Poultry", slug: "poultry" },
-  { id: "c5", name: "Dairy Products", slug: "dairy" },
-  { id: "c6", name: "Edible Oils", slug: "edible-oils" },
-  { id: "c7", name: "Food Ingredients", slug: "food-ingredients" },
-  { id: "c8", name: "Beverages", slug: "beverages" },
-  { id: "c9", name: "Fruits & Vegetables", slug: "fruits-and-vegetables" },
-  { id: "c10", name: "Canned & Packaged", slug: "canned-packaged" },
-  { id: "c11", name: "Frozen Foods", slug: "frozen-foods" },
-  { id: "c12", name: "Bakery & Confectionery", slug: "bakery-confectionery" },
+  { id: "c1", name: "Rice & Grains", slug: "rice-and-grains", image: "/categories/rice-and-grains.png" },
+  { id: "c2", name: "Meat", slug: "meat", image: "/categories/meat.png" },
+  { id: "c3", name: "Seafood", slug: "seafood", image: "/categories/seafood.png" },
+  { id: "c4", name: "Poultry", slug: "poultry", image: "/categories/poultry.png" },
+  { id: "c5", name: "Dairy Products", slug: "dairy", image: "/categories/dairy.png" },
+  { id: "c6", name: "Edible Oils", slug: "edible-oils", image: "/categories/edible-oils.png" },
+  { id: "c7", name: "Food Ingredients", slug: "food-ingredients", image: "/categories/food-ingredients.png" },
+  { id: "c8", name: "Beverages", slug: "beverages", image: "/categories/beverages.png" },
+  { id: "c9", name: "Fruits & Vegetables", slug: "fruits-and-vegetables", image: "/categories/fruits-and-vegetables.png" },
+  { id: "c10", name: "Canned & Packaged", slug: "canned-packaged", image: "/categories/canned-packaged.png" },
+  { id: "c11", name: "Frozen Foods", slug: "frozen-foods", image: "/categories/mix-product.png" },
+  { id: "c12", name: "Bakery & Confectionery", slug: "bakery-confectionery", image: "/categories/rice-and-grains.png" },
 ];
 
 export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
@@ -60,14 +63,20 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryItem[]>(FALLBACK_CATEGORIES);
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, SubCategoryItem[]>>(DEFAULT_SUBCATEGORIES);
+  const [hoveredCategorySlug, setHoveredCategorySlug] = useState<string>("rice-and-grains");
 
-  // Fetch categories from DB dynamically
+  // Fetch categories & subcategories from DB dynamically
   useEffect(() => {
     async function loadCategories() {
       try {
-        const res = await fetch("/api/categories", { cache: "no-store" });
-        if (res.ok) {
-          const json = await res.json();
+        const [catRes, subRes] = await Promise.all([
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/subcategories", { cache: "no-store" }),
+        ]);
+
+        if (catRes.ok) {
+          const json = await catRes.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
             const mapped: CategoryItem[] = json.data.map((cat: any) => ({
               id: cat.id,
@@ -76,6 +85,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
               image: cat.image,
             }));
             setCategories(mapped);
+          }
+        }
+
+        if (subRes.ok) {
+          const subJson = await subRes.json();
+          if (subJson.success && subJson.data) {
+            setSubcategoriesMap(subJson.data);
           }
         }
       } catch {
@@ -131,13 +147,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
     router.push(`/products?search=${encodeURIComponent(query)}`);
   };
 
-  const staticNavLinks = [
-    { name: "Home", href: "/" },
-    { name: "About Us", href: "/about" },
-    { name: "Services", href: "/services" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Contact", href: "/contact" },
-  ];
+  // Active hovered category details
+  const activeHoverCategory = categories.find((c) => c.slug === hoveredCategorySlug) || categories[0];
+  const activeSubcategories = subcategoriesMap[hoveredCategorySlug] || [];
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white shadow-sm border-b border-slate-100">
@@ -167,7 +179,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
               About Us
             </Link>
 
-            {/* Products with dynamic dropdown */}
+            {/* Products with dynamic Mega-Menu Dropdown */}
             <div
               className="relative"
               onMouseEnter={() => setProductsDropdownOpen(true)}
@@ -185,53 +197,200 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
                 />
               </Link>
 
-              {/* Dropdown Menu (pt-3 bridges the gap so moving the mouse down doesn't close it) */}
+              {/* Mega-Menu Dropdown */}
               {productsDropdownOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50">
-                  <div className="relative w-[560px] bg-white rounded-2xl shadow-2xl shadow-slate-900/10 border border-slate-200/80 overflow-hidden">
+                  <div className="relative w-[840px] bg-white rounded-3xl shadow-2xl shadow-slate-900/15 border border-slate-200/90 overflow-hidden flex flex-col">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 bg-slate-50/50">
                       <div>
-                        <p className="text-sm font-black text-slate-900">Shop by Category</p>
-                        <p className="text-[11px] text-slate-500 font-medium">Wholesale food supply across Saudi Arabia</p>
+                        <p className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span>Browse Product Catalog & Sub-Categories</span>
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Hover on any category to view its subcategories and varieties
+                        </p>
                       </div>
-                      <span className="text-[11px] font-bold text-brand-red bg-red-50 border border-red-100 px-2.5 py-1 rounded-full">
-                        {categories.length} Categories
-                      </span>
-                    </div>
-
-                    {/* Categories */}
-                    <div className="grid grid-cols-2 gap-1 p-2.5 max-h-[60vh] overflow-y-auto">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/products?category=${cat.slug}`}
-                          onClick={() => setProductsDropdownOpen(false)}
-                          className="group flex items-center gap-3 p-2 rounded-xl hover:bg-red-50/70 transition-colors"
-                        >
-                          <span className="relative w-10 h-10 rounded-lg bg-slate-50 border border-slate-200/80 group-hover:border-red-200 overflow-hidden shrink-0 flex items-center justify-center">
-                            {cat.image ? (
-                              <Image src={cat.image} alt="" fill className="object-cover" sizes="40px" />
-                            ) : (
-                              <span className="text-xs font-black text-brand-red">{cat.name.charAt(0)}</span>
-                            )}
-                          </span>
-                          <span className="text-[13px] font-semibold text-slate-700 group-hover:text-brand-red transition-colors leading-snug">
-                            {cat.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="p-2.5 pt-0">
                       <Link
                         href="/products"
                         onClick={() => setProductsDropdownOpen(false)}
-                        className="flex items-center justify-center w-full py-2.5 rounded-xl bg-red-50 hover:bg-brand-red text-brand-red hover:text-white text-[13px] font-bold transition-colors"
+                        className="text-xs font-bold text-brand-red hover:underline flex items-center gap-1"
                       >
-                        View All Products
+                        <span>View All Products</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
                       </Link>
+                    </div>
+
+                    {/* 2-Column Split: Categories on Left, Subcategories & Varieties on Right */}
+                    <div className="grid grid-cols-12 min-h-[420px] max-h-[520px]">
+                      {/* Left Column: Categories List */}
+                      <div className="col-span-5 border-r border-slate-100 p-3 space-y-1 overflow-y-auto max-h-[520px] bg-slate-50/30">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-3 py-1">
+                          Categories ({categories.length})
+                        </p>
+                        {categories.map((cat) => {
+                          const isHovered = hoveredCategorySlug === cat.slug;
+                          const hasSubs = (subcategoriesMap[cat.slug]?.length || 0) > 0;
+                          return (
+                            <div
+                              key={cat.id}
+                              onMouseEnter={() => setHoveredCategorySlug(cat.slug)}
+                              className={`group flex items-center justify-between p-2 rounded-2xl transition-all cursor-pointer ${
+                                isHovered
+                                  ? "bg-white shadow-sm border border-slate-200/80 text-brand-red"
+                                  : "hover:bg-white/80 text-slate-700"
+                              }`}
+                            >
+                              <Link
+                                href={`/products?category=${cat.slug}`}
+                                onClick={() => setProductsDropdownOpen(false)}
+                                className="flex items-center gap-3 flex-1 min-w-0"
+                              >
+                                <span
+                                  className={`relative w-9 h-9 rounded-xl bg-slate-100 border overflow-hidden shrink-0 flex items-center justify-center transition-colors ${
+                                    isHovered ? "border-brand-red/30 bg-red-50 text-brand-red" : "border-slate-200"
+                                  }`}
+                                >
+                                  {cat.image ? (
+                                    <Image src={cat.image} alt="" fill className="object-cover p-1" sizes="36px" />
+                                  ) : (
+                                    <span className="text-xs font-black">{cat.name.charAt(0)}</span>
+                                  )}
+                                </span>
+                                <span
+                                  className={`text-[13px] font-bold leading-tight truncate ${
+                                    isHovered ? "text-brand-red" : "text-slate-800"
+                                  }`}
+                                >
+                                  {cat.name}
+                                </span>
+                              </Link>
+
+                              {hasSubs ? (
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 transition-colors ${
+                                    isHovered ? "bg-brand-red text-white" : "bg-red-50 text-brand-red"
+                                  }`}
+                                >
+                                  {subcategoriesMap[cat.slug].length} sub
+                                </span>
+                              ) : (
+                                <ChevronRight
+                                  className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+                                    isHovered ? "text-brand-red translate-x-0.5" : "text-slate-300"
+                                  }`}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Right Column: Subcategories & Variety Buttons */}
+                      <div className="col-span-7 p-6 overflow-y-auto max-h-[520px] bg-white flex flex-col justify-between">
+                        <div>
+                          {/* Active Category Header */}
+                          <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+                            <div>
+                              <h3 className="text-lg font-black text-slate-900 mt-1">
+                                {activeHoverCategory?.name}
+                              </h3>
+                            </div>
+                            <Link
+                              href={`/products?category=${activeHoverCategory?.slug}`}
+                              onClick={() => setProductsDropdownOpen(false)}
+                              className="text-xs font-bold text-brand-red hover:underline flex items-center gap-1"
+                            >
+                              <span>Explore All</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+
+                          {/* If subcategories exist (e.g. Basmati & Non-Basmati for Rice & Grains) */}
+                          {activeSubcategories.length > 0 ? (
+                            <div className="space-y-4">
+                              <div className="space-y-3.5">
+                                {activeSubcategories.map((sub) => (
+                                  <div
+                                    key={sub.id}
+                                    className="p-4 rounded-2xl border border-slate-200/90 hover:border-brand-red/50 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/50"
+                                  >
+                                    <div className="flex items-center justify-between gap-3 mb-2.5">
+                                      <div>
+                                        <h4 className="text-sm font-black text-slate-900">
+                                          {sub.name}
+                                        </h4>
+                                        <p className="text-[11px] text-slate-500 line-clamp-1">
+                                          {sub.description}
+                                        </p>
+                                      </div>
+
+                                      <Link
+                                        href={`/products?category=${activeHoverCategory.slug}&subCategory=${sub.slug}`}
+                                        onClick={() => setProductsDropdownOpen(false)}
+                                        className="shrink-0 bg-brand-red hover:bg-red-700 text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-xs transition-colors flex items-center gap-1"
+                                      >
+                                        <span>View {sub.name}</span>
+                                        <ChevronRight className="w-3 h-3" />
+                                      </Link>
+                                    </div>
+
+                                    {/* Varieties Buttons / Pills */}
+                                    {sub.varieties && sub.varieties.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100/90">
+                                        {sub.varieties.map((v, i) => (
+                                          <Link
+                                            key={i}
+                                            href={`/products?category=${activeHoverCategory.slug}&subCategory=${sub.slug}&search=${encodeURIComponent(
+                                              v.split("(")[0].trim()
+                                            )}`}
+                                            onClick={() => setProductsDropdownOpen(false)}
+                                            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-brand-red hover:text-brand-red transition-all cursor-pointer shadow-2xs"
+                                          >
+                                            • {v}
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            /* When category has no subcategories configured */
+                            <div className="py-8 text-center space-y-3">
+                              <div className="w-14 h-14 rounded-2xl bg-red-50 text-brand-red flex items-center justify-center mx-auto border border-red-100">
+                                <Package className="w-7 h-7" />
+                              </div>
+                              <h4 className="text-sm font-bold text-slate-800">
+                                Wholesale {activeHoverCategory?.name}
+                              </h4>
+                              <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                                Sourced directly from certified suppliers and abattoirs for food service, catering, and retail distribution.
+                              </p>
+                              <Link
+                                href={`/products?category=${activeHoverCategory?.slug}`}
+                                onClick={() => setProductsDropdownOpen(false)}
+                                className="inline-flex items-center gap-1.5 bg-brand-red hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-sm transition-all"
+                              >
+                                <span>Browse {activeHoverCategory?.name}</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Dropdown Bottom Banner */}
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                          <span className="flex items-center gap-1 text-emerald-700 font-bold">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            SFDA Compliant & Halal Certified
+                          </span>
+                          <span className="font-semibold text-slate-400">
+                            Fast Delivery Across Saudi Arabia
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -287,7 +446,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
             {/* Red Enquiry Pill Button */}
             <button
               onClick={onOpenEnquiry}
-              className="bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide shadow-sm hover:shadow transition-all flex items-center gap-2"
+              className="bg-brand-red hover:bg-red-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
             >
               <span>Enquiry</span>
             </button>
@@ -295,7 +454,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
             {/* WhatsApp Green Pill Button */}
             <button
               onClick={handleWhatsAppClick}
-              className="bg-[#25D366] hover:bg-[#1fa855] text-white px-4 py-2.5 rounded-full text-sm font-semibold tracking-wide shadow-sm hover:shadow transition-all flex items-center gap-2"
+              className="bg-[#25D366] hover:bg-[#1fa855] text-white px-4 py-2.5 rounded-full text-sm font-semibold tracking-wide shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
             >
               <WhatsAppIcon className="w-4 h-4" />
               <span>WhatsApp</span>
@@ -306,14 +465,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
           <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={handleWhatsAppClick}
-              className="p-2 rounded-full bg-[#25D366] text-white"
+              className="p-2 rounded-full bg-[#25D366] text-white cursor-pointer"
               aria-label="WhatsApp"
             >
               <WhatsAppIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Open menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -349,7 +508,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
             <button
               onClick={closeMobileMenu}
               aria-label="Close menu"
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-brand-red flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-brand-red flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -369,7 +528,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-brand-red hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-brand-red hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer"
               >
                 Search
               </button>
@@ -408,7 +567,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
                   type="button"
                   onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
                   aria-expanded={mobileProductsOpen}
-                  className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold transition-colors ${
+                  className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold transition-colors cursor-pointer ${
                     pathname.startsWith("/products") ? "text-brand-red" : "text-slate-800 hover:bg-slate-50"
                   }`}
                 >
@@ -429,24 +588,48 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
 
                 {mobileProductsOpen && (
                   <div className="px-2 pb-2.5 pt-1 space-y-2">
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {categories.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/products?category=${cat.slug}`}
-                          onClick={closeMobileMenu}
-                          className="flex items-center gap-2 p-1.5 rounded-lg bg-white border border-slate-200/80 hover:border-brand-red/40 transition-colors min-w-0"
-                        >
-                          <span className="relative w-8 h-8 rounded-md bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                            {cat.image ? (
-                              <Image src={cat.image} alt="" fill className="object-cover" sizes="32px" />
-                            ) : (
-                              <span className="text-[11px] font-black text-brand-red">{cat.name.charAt(0)}</span>
+                    <div className="space-y-1">
+                      {categories.map((cat) => {
+                        const subs = subcategoriesMap[cat.slug] || [];
+                        return (
+                          <div key={cat.id} className="rounded-xl border border-slate-200/80 bg-white p-2">
+                            <Link
+                              href={`/products?category=${cat.slug}`}
+                              onClick={closeMobileMenu}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="relative w-7 h-7 rounded-md bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                  {cat.image ? (
+                                    <Image src={cat.image} alt="" fill className="object-cover" sizes="28px" />
+                                  ) : (
+                                    <span className="text-[10px] font-black text-brand-red">{cat.name.charAt(0)}</span>
+                                  )}
+                                </span>
+                                <span className="text-xs font-bold text-slate-800">{cat.name}</span>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            </Link>
+
+                            {/* Subcategories list for category */}
+                            {subs.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-slate-100 pl-2 space-y-1">
+                                {subs.map((s) => (
+                                  <Link
+                                    key={s.id}
+                                    href={`/products?category=${cat.slug}&subCategory=${s.slug}`}
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-red hover:underline py-0.5"
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0" />
+                                    <span>{s.name}</span>
+                                  </Link>
+                                ))}
+                              </div>
                             )}
-                          </span>
-                          <span className="text-xs font-semibold text-slate-700 leading-tight">{cat.name}</span>
-                        </Link>
-                      ))}
+                          </div>
+                        );
+                      })}
                     </div>
                     <Link
                       href="/products"
@@ -504,13 +687,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenEnquiry }) => {
                   closeMobileMenu();
                   if (onOpenEnquiry) onOpenEnquiry();
                 }}
-                className="bg-brand-red hover:bg-red-700 text-white py-3 rounded-xl text-sm font-bold shadow-md shadow-brand-red/20 transition-colors"
+                className="bg-brand-red hover:bg-red-700 text-white py-3 rounded-xl text-sm font-bold shadow-md shadow-brand-red/20 transition-colors cursor-pointer"
               >
                 Enquire Now
               </button>
               <button
                 onClick={handleWhatsAppClick}
-                className="bg-[#25D366] hover:bg-[#1fa855] text-white py-3 rounded-xl text-sm font-bold shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 transition-colors"
+                className="bg-[#25D366] hover:bg-[#1fa855] text-white py-3 rounded-xl text-sm font-bold shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 WhatsApp

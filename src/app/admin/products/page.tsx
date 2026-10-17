@@ -22,8 +22,11 @@ import {
   Loader2,
   Save,
   Edit2,
+  FolderTree,
+  ListPlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import type { SubCategoryItem } from "@/data/subcategories";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ProductCategory {
@@ -82,6 +85,9 @@ async function uploadToImageKit(file: File, folder: string): Promise<string | nu
 export default function AdminProductsPage() {
   const [activeTab, setActiveTab] = useState<"categories" | "products">("categories");
 
+  // ── State: Subcategories Mapping ──────────────────────────────────────────
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, SubCategoryItem[]>>({});
+
   // ── State: Categories ────────────────────────────────────────────────────
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [catSearch, setCatSearch] = useState("");
@@ -95,7 +101,13 @@ export default function AdminProductsPage() {
     image: "",
     description: "",
     show_on_homepage: false,
+    subcategories: [] as SubCategoryItem[],
   });
+
+  // State for subcategory currently being added / edited inside category modal
+  const [newSubcatName, setNewSubcatName] = useState("");
+  const [newSubcatDesc, setNewSubcatDesc] = useState("");
+  const [newSubcatVarieties, setNewSubcatVarieties] = useState("");
 
   // ── State: Products ──────────────────────────────────────────────────────
   const [products, setProducts] = useState<Product[]>([]);
@@ -105,9 +117,13 @@ export default function AdminProductsPage() {
   const [isAddProdOpen, setIsAddProdOpen] = useState(false);
   const [editingProd, setEditingProd] = useState<Product | null>(null);
   const [prodUploading, setProdUploading] = useState(false);
+  const [isAddingNewSubcatInline, setIsAddingNewSubcatInline] = useState(false);
+  const [inlineNewSubcatName, setInlineNewSubcatName] = useState("");
   const [prodForm, setProdForm] = useState({
     name: "",
     category_slug: "",
+    sub_category: "",
+    sub_category_slug: "",
     image: "",
     origin: "India",
     storage_type: "Ambient",
@@ -126,6 +142,19 @@ export default function AdminProductsPage() {
     specKey3: "",
     specVal3: "",
   });
+
+  // ── Fetch subcategories map ──────────────────────────────────────────────
+  const fetchSubcategories = useCallback(async () => {
+    try {
+      const res = await fetch("/api/subcategories");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setSubcategoriesMap(json.data);
+      }
+    } catch {
+      console.error("Could not load subcategories");
+    }
+  }, []);
 
   // ── Fetch categories ─────────────────────────────────────────────────────
   const fetchCategories = useCallback(async () => {
@@ -158,7 +187,8 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
-  }, [fetchCategories, fetchProducts]);
+    fetchSubcategories();
+  }, [fetchCategories, fetchProducts, fetchSubcategories]);
 
   // ── Category: auto-slug ──────────────────────────────────────────────────
   const handleCatNameChange = (name: string) => {
@@ -202,14 +232,69 @@ export default function AdminProductsPage() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Save failed");
 
+      // Save subcategories for this category if any
+      if (catForm.slug) {
+        await fetch("/api/subcategories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            categorySlug: catForm.slug,
+            subcategories: catForm.subcategories || [],
+          }),
+        });
+      }
+
       toast.success(editingCat ? "Category updated!" : "Category added!");
       setIsAddCatOpen(false);
       setEditingCat(null);
-      setCatForm({ name: "", slug: "", image: "", description: "", show_on_homepage: false });
+      setCatForm({ name: "", slug: "", image: "", description: "", show_on_homepage: false, subcategories: [] });
+      setNewSubcatName("");
+      setNewSubcatDesc("");
+      setNewSubcatVarieties("");
       fetchCategories();
+      fetchSubcategories();
     } catch (err) {
       toast.error(`Error: ${err}`);
     }
+  };
+
+  // ── Category Subcategory helpers ─────────────────────────────────────────
+  const handleAddSubcatToCat = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    if (!newSubcatName.trim()) {
+      toast.error("Please enter a subcategory name");
+      return;
+    }
+    const slug = slugify(newSubcatName.trim());
+    const varieties = newSubcatVarieties
+      .split(/[\n,]+/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    const newItem: SubCategoryItem = {
+      id: slug,
+      name: newSubcatName.trim(),
+      slug: slug,
+      description: newSubcatDesc.trim(),
+      varieties: varieties.length > 0 ? varieties : undefined,
+    };
+
+    setCatForm((prev) => ({
+      ...prev,
+      subcategories: [...(prev.subcategories || []).filter((s) => s.slug !== slug), newItem],
+    }));
+
+    setNewSubcatName("");
+    setNewSubcatDesc("");
+    setNewSubcatVarieties("");
+    toast.success(`Sub-category "${newItem.name}" added to list`);
+  };
+
+  const handleRemoveSubcatFromCat = (subSlug: string) => {
+    setCatForm((prev) => ({
+      ...prev,
+      subcategories: (prev.subcategories || []).filter((s) => s.slug !== subSlug),
+    }));
   };
 
   // ── Category: toggle homepage ─────────────────────────────────────────────
@@ -250,13 +335,18 @@ export default function AdminProductsPage() {
   // ── Category: open edit ───────────────────────────────────────────────────
   const openEditCat = (cat: ProductCategory) => {
     setEditingCat(cat);
+    const existingSubs = subcategoriesMap[cat.slug] || [];
     setCatForm({
       name: cat.name,
       slug: cat.slug,
       image: cat.image,
       description: cat.description,
       show_on_homepage: cat.show_on_homepage,
+      subcategories: existingSubs,
     });
+    setNewSubcatName("");
+    setNewSubcatDesc("");
+    setNewSubcatVarieties("");
     setIsAddCatOpen(true);
   };
 
@@ -279,9 +369,20 @@ export default function AdminProductsPage() {
   const openEditProd = (p: Product) => {
     setEditingProd(p);
     const specEntries = Object.entries(p.specs || {});
+    // Extract subcategory from specs if present
+    const subCatName = p.specs?.["Sub Category"] || p.specs?.["SubCategory"] || "";
+    const subCatSlug = p.specs?.["Sub-Category Slug"] || (subCatName ? slugify(subCatName) : "");
+
+    // Exclude subcategory entries from dynamic spec inputs
+    const otherSpecs = specEntries.filter(
+      ([k]) => k !== "Sub Category" && k !== "SubCategory" && k !== "Sub-Category Slug"
+    );
+
     setProdForm({
       name: p.name,
       category_slug: p.category_slug,
+      sub_category: subCatName,
+      sub_category_slug: subCatSlug,
       image: p.image || "",
       origin: p.origin || "India",
       storage_type: p.storage_type || "Ambient",
@@ -292,13 +393,15 @@ export default function AdminProductsPage() {
       description: p.description || "",
       featured_on_homepage: Boolean(p.featured_on_homepage),
       specs: p.specs || {},
-      specKey1: specEntries[0]?.[0] || "",
-      specVal1: specEntries[0]?.[1] || "",
-      specKey2: specEntries[1]?.[0] || "",
-      specVal2: specEntries[1]?.[1] || "",
-      specKey3: specEntries[2]?.[0] || "",
-      specVal3: specEntries[2]?.[1] || "",
+      specKey1: otherSpecs[0]?.[0] || "",
+      specVal1: otherSpecs[0]?.[1] || "",
+      specKey2: otherSpecs[1]?.[0] || "",
+      specVal2: otherSpecs[1]?.[1] || "",
+      specKey3: otherSpecs[2]?.[0] || "",
+      specVal3: otherSpecs[2]?.[1] || "",
     });
+    setIsAddingNewSubcatInline(false);
+    setInlineNewSubcatName("");
     setIsAddProdOpen(true);
   };
 
@@ -307,6 +410,22 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const cat = categories.find((c) => c.slug === prodForm.category_slug);
     const specs: Record<string, string> = {};
+
+    // Keep existing specs
+    if (prodForm.specs) {
+      Object.assign(specs, prodForm.specs);
+    }
+
+    // Set subcategory specs
+    if (prodForm.sub_category) {
+      specs["Sub Category"] = prodForm.sub_category;
+      specs["Sub-Category Slug"] = prodForm.sub_category_slug || slugify(prodForm.sub_category);
+    } else {
+      delete specs["Sub Category"];
+      delete specs["SubCategory"];
+      delete specs["Sub-Category Slug"];
+    }
+
     if (prodForm.specKey1 && prodForm.specVal1) specs[prodForm.specKey1] = prodForm.specVal1;
     if (prodForm.specKey2 && prodForm.specVal2) specs[prodForm.specKey2] = prodForm.specVal2;
     if (prodForm.specKey3 && prodForm.specVal3) specs[prodForm.specKey3] = prodForm.specVal3;
@@ -342,6 +461,8 @@ export default function AdminProductsPage() {
       setProdForm({
         name: "",
         category_slug: categories[0]?.slug || "",
+        sub_category: "",
+        sub_category_slug: "",
         image: "",
         origin: "India",
         storage_type: "Ambient",
@@ -438,7 +559,10 @@ export default function AdminProductsPage() {
           onClick={() => {
             if (activeTab === "categories") {
               setEditingCat(null);
-              setCatForm({ name: "", slug: "", image: "", description: "", show_on_homepage: false });
+              setCatForm({ name: "", slug: "", image: "", description: "", show_on_homepage: false, subcategories: [] });
+              setNewSubcatName("");
+              setNewSubcatDesc("");
+              setNewSubcatVarieties("");
               setIsAddCatOpen(true);
             } else {
               if (categories.length === 0) {
@@ -446,9 +570,13 @@ export default function AdminProductsPage() {
                 return;
               }
               setEditingProd(null);
+              setIsAddingNewSubcatInline(false);
+              setInlineNewSubcatName("");
               setProdForm({
                 name: "",
                 category_slug: categories[0]?.slug || "",
+                sub_category: "",
+                sub_category_slug: "",
                 image: "",
                 origin: "India",
                 storage_type: "Ambient",
@@ -581,6 +709,14 @@ export default function AdminProductsPage() {
                     <p className="text-[11px] text-slate-500 font-mono mt-0.5">/{cat.slug}</p>
                     {cat.description && (
                       <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{cat.description}</p>
+                    )}
+                    {subcategoriesMap[cat.slug] && subcategoriesMap[cat.slug].length > 0 && (
+                      <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
+                          <FolderTree className="w-3 h-3 text-brand-red" />
+                          <span>{subcategoriesMap[cat.slug].length} Sub-Categories</span>
+                        </span>
+                      </div>
                     )}
                   </div>
 
@@ -718,6 +854,14 @@ export default function AdminProductsPage() {
                           <span className="font-bold text-slate-900 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs">
                             {p.category_name}
                           </span>
+                          {p.specs?.["Sub Category"] && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <FolderTree className="w-3 h-3 text-brand-red shrink-0" />
+                              <span className="text-[11px] text-slate-600 font-medium truncate max-w-[100px]">
+                                {p.specs["Sub Category"]}
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-1.5 text-slate-900 font-bold text-xs">
@@ -901,6 +1045,108 @@ export default function AdminProductsPage() {
                   />
                 </div>
 
+                {/* Sub-Categories Management */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-slate-900 font-bold flex items-center gap-1.5">
+                        <FolderTree className="w-4 h-4 text-brand-red" />
+                        <span>Sub-Categories ({catForm.subcategories?.length || 0})</span>
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        Create subcategories (e.g. Basmati Rice, Non-Basmati Rice) and their varieties.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* List of current subcategories */}
+                  {catForm.subcategories && catForm.subcategories.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {catForm.subcategories.map((sub) => (
+                        <div
+                          key={sub.slug}
+                          className="bg-white border border-slate-200 rounded-xl p-3 flex items-start justify-between gap-3 shadow-2xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 text-xs">{sub.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">/{sub.slug}</span>
+                            </div>
+                            {sub.description && (
+                              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{sub.description}</p>
+                            )}
+                            {sub.varieties && sub.varieties.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {sub.varieties.map((v, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium"
+                                  >
+                                    {v}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSubcatFromCat(sub.slug)}
+                            className="text-slate-400 hover:text-brand-red p-1 rounded-lg hover:bg-red-50 transition-colors shrink-0"
+                            title="Remove subcategory"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white/60 border border-dashed border-slate-200 rounded-xl p-3 text-center text-[11px] text-slate-400">
+                      No subcategories configured yet. Use the fields below to add one.
+                    </div>
+                  )}
+
+                  {/* Add New Subcategory Box */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2.5">
+                    <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <ListPlus className="w-3.5 h-3.5 text-brand-red" />
+                      <span>Add a Sub-Category</span>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Subcategory Name (e.g. Basmati Rice)"
+                        value={newSubcatName}
+                        onChange={(e) => setNewSubcatName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-red font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description (optional)"
+                        value={newSubcatDesc}
+                        onChange={(e) => setNewSubcatDesc(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-red font-medium"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Varieties (comma separated, e.g. 1121 Sella, 1509 Steam, Sharbati)"
+                        value={newSubcatVarieties}
+                        onChange={(e) => setNewSubcatVarieties(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-red font-medium"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddSubcatToCat}
+                      className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Sub-Category</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Homepage toggle */}
                 <label className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl p-3 cursor-pointer select-none hover:bg-red-100 transition-colors">
                   <input
@@ -996,7 +1242,16 @@ export default function AdminProductsPage() {
                     <select
                       required
                       value={prodForm.category_slug}
-                      onChange={(e) => setProdForm({ ...prodForm, category_slug: e.target.value })}
+                      onChange={(e) => {
+                        const newCatSlug = e.target.value;
+                        setProdForm({
+                          ...prodForm,
+                          category_slug: newCatSlug,
+                          sub_category: "",
+                          sub_category_slug: "",
+                        });
+                        setIsAddingNewSubcatInline(false);
+                      }}
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-brand-red cursor-pointer"
                     >
                       <option value="">Select category...</option>
@@ -1007,6 +1262,125 @@ export default function AdminProductsPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Sub-Category Selection / Inline Addition */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-slate-800 font-bold flex items-center gap-1.5">
+                      <FolderTree className="w-4 h-4 text-brand-red" />
+                      <span>Sub-Category (Optional)</span>
+                    </label>
+                    {prodForm.category_slug && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewSubcatInline(!isAddingNewSubcatInline);
+                          setInlineNewSubcatName("");
+                        }}
+                        className="text-xs text-brand-red font-bold hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>{isAddingNewSubcatInline ? "Choose existing" : "+ Add new sub-category"}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {!isAddingNewSubcatInline ? (
+                    <div>
+                      <select
+                        value={prodForm.sub_category_slug || ""}
+                        disabled={!prodForm.category_slug}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const currentCatSubs = subcategoriesMap[prodForm.category_slug] || [];
+                          const found = currentCatSubs.find((s) => s.slug === val);
+                          setProdForm({
+                            ...prodForm,
+                            sub_category: found ? found.name : "",
+                            sub_category_slug: val,
+                          });
+                        }}
+                        className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-brand-red cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
+                      >
+                        <option value="">
+                          {!prodForm.category_slug
+                            ? "Select a category first..."
+                            : (subcategoriesMap[prodForm.category_slug]?.length || 0) === 0
+                            ? "No sub-categories in this category (click + Add new)"
+                            : "None / Not Applicable"}
+                        </option>
+                        {(subcategoriesMap[prodForm.category_slug] || []).map((sub) => (
+                          <option key={sub.slug} value={sub.slug}>
+                            {sub.name}
+                          </option>
+                        ))}
+                      </select>
+                      {prodForm.sub_category && (
+                        <p className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
+                          ✓ Assigned to subcategory: <strong>{prodForm.sub_category}</strong>
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="New Sub-category Name (e.g. Basmati Rice)"
+                        value={inlineNewSubcatName}
+                        onChange={(e) => setInlineNewSubcatName(e.target.value)}
+                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-red font-medium"
+                      />
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!inlineNewSubcatName.trim()) {
+                            toast.error("Enter a subcategory name");
+                            return;
+                          }
+                          const sName = inlineNewSubcatName.trim();
+                          const sSlug = slugify(sName);
+                          const currentSubs = subcategoriesMap[prodForm.category_slug] || [];
+                          const updatedSubs = [
+                            ...currentSubs.filter((s) => s.slug !== sSlug),
+                            { id: sSlug, name: sName, slug: sSlug, description: "" },
+                          ];
+                          try {
+                            const res = await fetch("/api/subcategories", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                categorySlug: prodForm.category_slug,
+                                subcategories: updatedSubs,
+                              }),
+                            });
+                            const json = await res.json();
+                            if (json.success) {
+                              setSubcategoriesMap((prev) => ({
+                                ...prev,
+                                [prodForm.category_slug]: updatedSubs,
+                              }));
+                              setProdForm((prev) => ({
+                                ...prev,
+                                sub_category: sName,
+                                sub_category_slug: sSlug,
+                              }));
+                              setIsAddingNewSubcatInline(false);
+                              setInlineNewSubcatName("");
+                              toast.success(`Sub-category "${sName}" created and assigned!`);
+                            } else {
+                              toast.error("Failed to create subcategory");
+                            }
+                          } catch {
+                            toast.error("Network error saving subcategory");
+                          }
+                        }}
+                        className="bg-brand-red hover:bg-red-700 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors shrink-0 cursor-pointer"
+                      >
+                        Create & Assign
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Image */}

@@ -13,6 +13,8 @@ export interface ProductCardData {
   name: string;
   category_slug: string;
   category_name: string;
+  sub_category?: string;
+  sub_category_slug?: string;
   image: string;
   origin?: string;
   storage_type?: string;

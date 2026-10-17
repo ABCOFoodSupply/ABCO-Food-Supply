@@ -1,0 +1,8 @@
+[
+  {"id":"cat-mutton","name":"Mutton","slug":"mutton","description":"Premium halal mutton and individual cuts sourced from quality-assured farms.","show_on_homepage":true,"sort_order":2},
+  {"id":"cat-beef","name":"Beef","slug":"beef","description":"Premium halal beef cuts including chuck, tenderloin, brisket, striploin in bulk supply.","show_on_homepage":true,"sort_order":3},
+  {"id":"cat-seafood","name":"Seafood","slug":"seafood","description":"Fresh and frozen seafood including fish fillets, salmon, shellfish, prawns for wholesale.","show_on_homepage":true,"sort_order":4},
+  {"id":"cat-poultry","name":"Poultry","slug":"poultry","description":"Halal poultry including whole birds and premium chicken cuts for foodservice and retail.","show_on_homepage":true,"sort_order":5},
+  {"id":"cat-oils","name":"Edible Oils and Food Ingredients","slug":"edible-oils-ingredients","description":"A complete range of edible oils, spices, lentils, grains, and baking ingredients for commercial use.","show_on_homepage":false,"sort_order":6},
+  {"id":"cat-dairy","name":"Dairy and Beverages","slug":"dairy-beverages","description":"Chilled and long-life dairy products, juices, soft drinks and bottled water in bulk.","show_on_homepage":false,"sort_order":7}
+]
